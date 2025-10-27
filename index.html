@@ -90,7 +90,35 @@
             justify-content: center;
             align-items: center;
         }
+        /* Mobil versiya uchun ortga tugmasi */
+.mobile-back-btn {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .mobile-back-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background-color: rgba(34, 139, 34, 0.9);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        z-index: 50;
+    }
+    .mobile-back-btn:hover {
+        background-color: #006400;
+    }
+}
+                                 /* x tugmasi 2 */
     </style>
+    
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-mono antialiased">
     <div id="app" class="flex h-screen overflow-hidden">
