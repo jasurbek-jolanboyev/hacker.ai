@@ -856,7 +856,7 @@ const applyTheme = (theme) => {
                     return;
                 }
                 const message = `User ${currentUser.name} ${currentUser.surname} (Phone: ${currentUser.phone}, Address: ${currentUser.address}) wants to buy ${plan} plan.`;
-                window.open(`https://t.me/vscoderr?text=${encodeURIComponent(message)}`, '_blank');
+                window.open(`https://t.me/serinaqu?text=${encodeURIComponent(message)}`, '_blank');
                 alert('Request sent to admin via Telegram. They will process your payment and add you to the plan.');
                 addUserToPlan(plan.toLowerCase(), {
                     phone: currentUser.phone,
@@ -921,7 +921,7 @@ themeToggleSettings.addEventListener('click', () => {
             closeAboutBtn.addEventListener('click', hideAboutModal);
             sponsorsBtn.addEventListener('click', showSponsorsModal);
             closeSponsorsBtn.addEventListener('click', hideSponsorsModal);
-            supportBtn.addEventListener('click', () => window.open('https://t.me/vscoderr', '_blank'));
+            supportBtn.addEventListener('click', () => window.open('https://t.me/serinaqu', '_blank'));
             registerLink.addEventListener('click', () => { hideLoginModal(); showRegisterModal(); });
             loginLink.addEventListener('click', () => { hideRegisterModal(); showLoginModal(); });
             registerBtn.addEventListener('click', registerUser);
