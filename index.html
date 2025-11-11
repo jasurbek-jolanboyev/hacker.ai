@@ -224,7 +224,7 @@
 
     <!-- Tariffs Modal -->
     <div id="tariffs-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-lg w-full mx-4">
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-y-auto max-h-[80vh]">
             <h2 class="text-2xl font-bold mb-6">Choose a Tariff</h2>
             <div class="space-y-4">
                 <div class="p-4 border rounded-xl shadow-sm">
@@ -737,19 +737,19 @@ Va siz tasavvur qilgan hamma narsa: Cheklovsiz yordam bilan har qanday g'oya yok
             };
 
             // Theme Management
-            const applyTheme = (theme) => {
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                    themeIcon.setAttribute('data-lucide', 'moon');
-                    themeText.textContent = 'Dark Mode';
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    themeIcon.setAttribute('data-lucide', 'sun');
-                    themeText.textContent = 'Light Mode';
-                }
-                lucide.createIcons();
-                localStorage.setItem('theme', theme);
-            };
+const applyTheme = (theme) => {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.getElementById('theme-icon').setAttribute('data-lucide', 'moon');
+    document.getElementById('theme-text').textContent = 'Dark Mode';
+  } else {
+    document.documentElement.classList.remove('dark');
+    document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
+    document.getElementById('theme-text').textContent = 'Light Mode';
+  }
+  lucide.createIcons();
+  localStorage.setItem('theme', theme);
+};
 
             // Modal Logic
             const showRateLimitModal = () => rateLimitModal.classList.remove('hidden');
@@ -885,13 +885,29 @@ Va siz tasavvur qilgan hamma narsa: Cheklovsiz yordam bilan har qanday g'oya yok
                 const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
                 applyTheme(newTheme);
             });
-            themeToggleSettings.addEventListener('click', () => {
-                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-                applyTheme(newTheme);
-            });
+            themeToggle.addEventListener('click', () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  applyTheme(isDark ? 'light' : 'dark');
+});
+
+themeToggleSettings.addEventListener('click', () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  applyTheme(isDark ? 'light' : 'dark');
+});
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('-translate-x-full');
             });
+            document.addEventListener('click', (e) => {
+  const sidebar = document.getElementById('sidebar');
+  const menuToggle = document.getElementById('menu-toggle');
+
+  // Agar sidebar ochiq bo'lsa va bosilgan joy sidebar yoki menu tugmasi bo'lmasa
+  if (sidebar.classList.contains('-translate-x-full') === false) {
+    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+      sidebar.classList.add('-translate-x-full');
+    }
+  }
+});
             closeModalBtn.addEventListener('click', hideRateLimitModal);
             profileBtn.addEventListener('click', showProfileModal);
             closeProfileBtn.addEventListener('click', hideProfileModal);
@@ -915,11 +931,15 @@ Va siz tasavvur qilgan hamma narsa: Cheklovsiz yordam bilan har qanday g'oya yok
             });
 
             // Initialization
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            applyTheme(savedTheme);
-            loadUsersFromStorage();
-            addTestUsers(); // Test foydalanuvchilarini qo'shish
-            showLoginModal();
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+  applyTheme(savedTheme);
+} else {
+  applyTheme('dark'); // standart dark
+}
+loadUsersFromStorage();
+addTestUsers();
+showLoginModal();
         });
     </script>
 </body>
