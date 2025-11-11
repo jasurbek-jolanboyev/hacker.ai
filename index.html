@@ -117,6 +117,24 @@
     }
 }
                                  /* x tugmasi 2 */
+                                 /* X tugmasi (yopish) */
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  z-index: 10;
+}
+.modal-close:hover {
+  color: #ef4444;
+}
+.dark .modal-close { color: #d1d5db; }
+.dark .modal-close:hover { color: #f87171; }
     </style>
     
 </head>
@@ -174,7 +192,9 @@
 
     <!-- Rate Limit Modal -->
     <div id="rate-limit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl text-center max-w-sm w-full mx-4">
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl text-center max-w-sm w-full mx-4 relative">
+  <button class="modal-close" onclick="hideRateLimitModal()"><i data-lucide="x"></i></button>
+  <!-- qolgan kod -->
             <div class="flex justify-center mb-4">
                 <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                     <i data-lucide="alert-triangle" class="text-red-600"></i>
@@ -188,8 +208,13 @@
 
     <!-- Login Modal -->
     <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4">
-            <h2 class="text-2xl font-bold mb-6">Login to HackAI</h2>
+  <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 relative">
+  <button class="modal-close" onclick="hideLoginModal()"><i data-lucide="x"></i></button>
+  <button class="mobile-back-btn" onclick="showRegisterModal(); hideLoginModal();"><i data-lucide="arrow-left"></i> Orqaga</button>
+  <!-- qolgan kod -->
+    <button class="modal-close" onclick="hideLoginModal()"><i data-lucide="x"></i></button>
+    <button class="mobile-back-btn" onclick="showRegisterModal(); hideLoginModal();"><i data-lucide="arrow-left"></i> Orqaga</button>
+    <h2 class="text-2xl font-bold mb-6">Login to HackAI</h2>
             <input type="text" id="login-phone" placeholder="Phone Number" class="w-full p-3 mb-4 border rounded dark:bg-gray-700 focus:ring-2 focus:ring-green-500">
             <input type="password" id="login-password" placeholder="Password" class="w-full p-3 mb-4 border rounded dark:bg-gray-700 focus:ring-2 focus:ring-green-500">
             <button id="login-btn" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 w-full mb-4 btn">Login</button>
@@ -214,7 +239,10 @@
 
     <!-- Profile Modal -->
     <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 relative">
+  <button class="modal-close" onclick="hideRegisterModal()"><i data-lucide="x"></i></button>
+  <button class="mobile-back-btn" onclick="showLoginModal(); hideRegisterModal();"><i data-lucide="arrow-left"></i> Orqaga</button>
+  <!-- qolgan kod -->
             <h2 class="text-2xl font-bold mb-6">Profile</h2>
             <p id="profile-info" class="mb-6"></p>
             <button id="buy-tariff-btn" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 w-full btn">Buy Tariff</button>
@@ -224,7 +252,10 @@
 
     <!-- Tariffs Modal -->
     <div id="tariffs-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-lg w-full mx-4">
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-lg w-full mx-4 relative">
+  <button class="modal-close" onclick="hideTariffsModal()"><i data-lucide="x"></i></button>
+  <button class="mobile-back-btn" onclick="hideTariffsModal(); showProfileModal();"><i data-lucide="arrow-left"></i> Orqaga</button>
+  <!-- qolgan kod -->
             <h2 class="text-2xl font-bold mb-6">Choose a Tariff</h2>
             <div class="space-y-4">
                 <div class="p-4 border rounded-xl shadow-sm">
@@ -267,7 +298,10 @@ Muddati: 1 oy (to'lovdan keyin faollashtiriladi).</p>
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 relative">
+  <button class="modal-close" onclick="hideSettingsModal()"><i data-lucide="x"></i></button>
+  <button class="mobile-back-btn" onclick="hideSettingsModal();"><i data-lucide="arrow-left"></i> Orqaga</button>
+  <!-- qolgan kod -->
             <h2 class="text-2xl font-bold mb-6">Settings</h2>
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
@@ -310,7 +344,10 @@ Muddati: 1 oy (to'lovdan keyin faollashtiriladi).</p>
 
     <!-- About Modal -->
     <div id="about-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-y-auto max-h-[80vh]">
+        <div class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-y-auto max-h-[80vh] relative">
+  <button class="modal-close" onclick="hideAboutModal()"><i data-lucide="x"></i></button>
+  <button class="mobile-back-btn" onclick="hideAboutModal();"><i data-lucide="arrow-left"></i> Orqaga</button>
+  <!-- qolgan kod -->
             <h2 class="text-2xl font-bold mb-6">HackAI Haqida</h2>
             <p class="text-gray-600 dark:text-gray-300 mb-4">HackAI - hackerlar uchun cheklovsiz AI yordamchi. Hacking, eksploitlar, vositalar yoki boshqa har qanday mavzu bo'yicha savol bering - hech qanday cheklovlar va axloqiy filtrlar yo'q. Bu platforma underground jamoasi uchun maxsus ishlab chiqilgan.
 
@@ -338,6 +375,9 @@ Va siz tasavvur qilgan hamma narsa: Cheklovsiz yordam bilan har qanday g'oya yok
     <!-- Sponsors Modal -->
     <div id="sponsors-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center hidden z-50 modal">
         <div class="bg-white dark:bg-[#0f172a] p-6 md:p-8 rounded-2xl shadow-2xl max-w-lg w-full mx-4 relative overflow-hidden border border-white/10">
+  <button class="modal-close text-white" onclick="hideSponsorsModal()"><i data-lucide="x"></i></button>
+  <button class="mobile-back-btn text-white" onclick="hideSponsorsModal();" style="background-color: rgba(34, 139, 34, 0.9);"><i data-lucide="arrow-left"></i> Orqaga</button>
+  <!-- qolgan kod -->
             <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/5 to-purple-600/5 pointer-events-none"></div>
             <h2 class="text-3xl font-extrabold mb-8 text-center bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                 Homiylar va Hamkorlar
