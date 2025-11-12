@@ -796,7 +796,7 @@ const applyTheme = (theme) => {
                 if (phone && name && surname && address && passport && password) {
                     const user = { phone, name, surname, address, passport, password };
                     localStorage.setItem('hackAIUser_' + phone, JSON.stringify(user));
-                    addUserToPlan('premium', { phone, name, address }); // Ro'yxatdan o'tganda premium tarifga qo'shish
+                    // addUserToPlan('premium', { phone, name, address }); // Ro'yxatdan o'tganda premium tarifga qo'shish
                     alert('Registered successfully! Please login.');
                     hideRegisterModal();
                     showLoginModal();
@@ -849,23 +849,52 @@ const applyTheme = (theme) => {
                 }
             };
 
-            // Tariff Purchase
+            // // Tariff Purchase
+
             const handleBuyTariff = (plan) => {
-                if (!isLoggedIn) {
-                    showLoginModal();
-                    return;
-                }
-                const message = `User ${currentUser.name} ${currentUser.surname} (Phone: ${currentUser.phone}, Address: ${currentUser.address}) wants to buy ${plan} plan.`;
-                window.open(`https://t.me/serinaqu?text=${encodeURIComponent(message)}`, '_blank');
-                alert('Request sent to admin via Telegram. They will process your payment and add you to the plan.');
-                addUserToPlan(plan.toLowerCase(), {
-                    phone: currentUser.phone,
-                    name: currentUser.name,
-                    address: currentUser.address
-                });
-                checkPlan();
-                hideTariffsModal();
-            };
+  if (!isLoggedIn || !currentUser?.phone) {
+    alert('Iltimos, avval telefon raqamingiz bilan tizimga kiring!');
+    showLoginModal();
+    return;
+  }
+
+  const message = `
+YANGI TARIF SO‘ROVI
+
+Foydalanuvchi: ${currentUser.name} ${currentUser.surname}
+Telefon: ${currentUser.phone}
+Manzil: ${currentUser.address}
+Passport: ${currentUser.passport}
+Tarif: ${plan}
+Narxi: ${plan === 'Premium' ? '34.000 so‘m' : '47.000 so‘m'}
+Muddati: 1 oy
+`.trim();
+
+  const telegramUrl = `https://t.me/serinaqu?text=${encodeURIComponent(message)}`;
+  window.open(telegramUrl, '_blank');
+
+  alert('Siz @serinaqu ga yo‘naltirildingiz. U yerda ma’lumotlaringiz ko‘rinadi. To‘lov qiling, admin tasdiqlaydi.');
+
+  // addUserToPlan O‘CHIRILDI!
+  // checkPlan(); ham kerak emas
+  hideTariffsModal();
+};
+            // const handleBuyTariff = (plan) => {
+            //     if (!isLoggedIn) {
+            //         showLoginModal();
+            //         return;
+            //     }
+            //     const message = `User ${currentUser.name} ${currentUser.surname} (Phone: ${currentUser.phone}, Address: ${currentUser.address}) wants to buy ${plan} plan.`;
+            //     window.open(`https://t.me/serinaqu?text=${encodeURIComponent(message)}`, '_blank');
+            //     alert('Request sent to admin via Telegram. They will process your payment and add you to the plan.');
+            //     addUserToPlan(plan.toLowerCase(), {
+            //         phone: currentUser.phone,
+            //         name: currentUser.name,
+            //         address: currentUser.address
+            //     });
+            //     checkPlan();
+            //     hideTariffsModal();
+            // };
 
             // Event Listeners
             sendButton.addEventListener('click', handleSend);
