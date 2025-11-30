@@ -1,0 +1,58 @@
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HackAI Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body class="p-6 bg-gray-900 text-white">
+<h1 class="text-2xl mb-4">HackAI — Admin Panel</h1>
+<div id="admin-area" class="space-y-4">
+<div id="login-area">
+<input id="admin-phone" placeholder="Admin phone" class="p-2 mr-2 text-black" />
+<input id="admin-password" placeholder="Password" type="password" class="p-2 mr-2 text-black" />
+<button id="admin-login" class="p-2 bg-green-600 rounded">Login</button>
+</div>
+
+<div id="controls" class="hidden">
+<button id="refresh-users" class="p-2 bg-indigo-600 rounded">Refresh Users</button>
+<div id="users-list" class="mt-4"></div>
+</div>
+</div>
+
+<script>
+// same firebaseConfig as index (replace)
+const firebaseConfig = {
+apiKey: "REPLACE_WITH_API_KEY",
+authDomain: "REPLACE_WITH_PROJECT.firebaseapp.com",
+projectId: "REPLACE_WITH_PROJECT_ID",
+storageBucket: "REPLACE_WITH_PROJECT.appspot.com",
+messagingSenderId: "SENDER_ID",
+appId: "APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const phoneToEmail = (phone) => phone.replace(/\D/g, '') + '@hackai.local';
+
+document.getElementById('admin-login').addEventListener('click', async () => {
+const phone = document.getElementById('admin-phone').value.trim();
+const password = document.getElementById('admin-password').value.trim();
+if (!phone || !password) { alert('Fill'); return; }
+try {
+const email = phoneToEmail(phone);
+const cred = await auth.signInWithEmailAndPassword(email, password);
+const uid = cred.user.uid;
+const userDoc = await db.collection('users').doc(uid).get();
+if (!userDoc.exists || !userDoc.data().isAdmin) {
+alert('Not an admin. Set isAdmin=true for your user in Firestore.');
+auth.signOut();
+return;
+}
+document.getElementById('controls').classList.remove('hidden');
+loadUsers();
+</html>
