@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+
 <style>
 /* Ranglar DEFCON/Kiber uslubida saqlanadi: Yashil/Qora/Kulrang */
 :root {
@@ -260,6 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggleSettings = document.getElementById('theme-toggle-settings');
     const overlay = document.getElementById('overlay');
     const sidebarActions = document.querySelectorAll('.sidebar-action');
+    
+    // Lucide Icons chaqiruvi
     setTimeout(() => lucide.createIcons(), 0); 
 
     // State Management
@@ -269,20 +272,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🟢 API KALITINI KIRITISH JOYI! 🟢
     // Iltimos, o'zingizning haqiqiy kalitingizni TIRNOQLAR ICHIGA joylashtiring.
-    // "AIzaSyDaIKpwFQDD4kkQSTC-3PYGIefrnKIiHOE" bu yerda joylashmasligi kerak.
     const API_KEY = "AIzaSyDaIKpwFQDD4kkQSTC-3PYGIefrnKIiHOE"; // <<< SHU YERGA O'Z KALITINGIZNI KIRITING!!!
 
     // Model va URL konfiguratsiyasi
-    const MODEL_NAME = "gemini-1.5-flash"; // Eng yangi va tez model
-    // URL V1 versiyasi bilan to'g'rilandi:
+    const MODEL_NAME = "gemini-1.5-flash"; 
+    // TO'G'RILANGAN URL:
     const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL_NAME}:generateContent?key=${API_KEY}`; 
     // --- API END ---
     
+    // Modal funksiyalar
+    const showModal = (modalElement) => {
+        modalElement.classList.remove('hidden');
+    };
+
+    const hideModal = (modalElement) => {
+        modalElement.classList.add('hidden');
+    };
+
     // Web Search Function (DuckDuckGo API)
     const webSearch = async (query) => {
         try {
-            // DuckDuckGo orqali oddiy qidiruv amalga oshiriladi (bu qism Google Gemini API ga ulanmaydi)
-            // Eslatma: Ushbu DuckDuckGo API cheklangan bo'lishi mumkin. To'liq veb-qidiruv uchun server-side vositalar tavsiya etiladi.
             const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&t=defcon_ai&no_html=1&kl=us-en`);
             const data = await response.json();
             let abstract = data.Abstract || data.AbstractText || '';
@@ -302,30 +311,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Modal funksiyalar
-    const showModal = (modalElement) => {
-        modalElement.classList.remove('hidden');
-    };
-
-    const hideModal = (modalElement) => {
-        modalElement.classList.add('hidden');
-    };
-
     // API Call Logic
     const callGeminiAPI = async (userMessage) => {
-        // API_KEY tekshiruvi to'g'rilandi: faqat kalitning mavjudligi va uzunligi tekshiriladi
+        // API_KEY tekshiruvi (faqat kalitni kiritilganini va uzunligini tekshiradi)
         if (!API_KEY || API_KEY === "YOUR_API_KEY_HERE" || API_KEY.length < 30) {
             showModal(rateLimitModal);
             addMessage('model', "Iltimos, kod ichidagi `API_KEY` o'zgaruvchisiga o'zingizning haqiqiy Gemini API kalitingizni kiriting.");
             return;
         }
 
-        sendButton.disabled = true; // Yuborishni o'chirish
+        sendButton.disabled = true; 
         messageInput.disabled = true;
         showTypingIndicator();
 
         try {
-            // 🌟 KUCHAYTIRILGAN SYSTEM PROMPT 🌟
             let systemPrompt = `
 Siz DEFCON AI - Kuchaytirilgan Kiberxavfsizlik Mutaxassisi, Axloqiy Haker (Ethical Hacker) va Tajribali Ustozsiz.
 Sizning maqsadingiz: foydalanuvchini **chuqur, amaliy va texnik jihatdan batafsil** o'qitishdir.
@@ -350,7 +349,7 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
                 }
             }
 
-            // Suhbat tarixini formatlash (API formatiga)
+            // Suhbat tarixini formatlash
             const contents = chatHistory.map(msg => ({
                 role: msg.role === 'user' ? 'user' : 'model',
                 parts: msg.parts
@@ -398,13 +397,12 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
         } catch (error) {
             console.error('API Call Failed:', error);
             if (!rateLimitModal.classList.contains('hidden')) {
-                // Agar modal ochilgan bo'lsa, xato xabarini qayta ko'rsatmaslik
                 return;
             }
             addMessage('model', `Kechirasiz, AI bilan bog'lanishda kutilmagan xatolik yuz berdi. Iltimos, API kalitingizni va internet ulanishingizni tekshiring. Xato: ${error.message}`);
         } finally {
             hideTypingIndicator();
-            sendButton.disabled = false; // Yuborishni yoqish
+            sendButton.disabled = false; 
             messageInput.disabled = false;
             messageInput.focus();
         }
@@ -416,7 +414,6 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
 
     const createNewConversation = () => {
         if (currentConversationId) {
-            // Joriy suhbatni saqlash (agar bo'sh bo'lmasa)
             if (chatHistory.length > 0) {
                 conversations[currentConversationId] = chatHistory;
             }
@@ -438,7 +435,6 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
     };
 
     const addMessage = (role, text) => {
-        // Xush kelibsiz xabarini o'chirish
         const welcomeMessage = chatContainer.querySelector('.welcome-message');
         if (welcomeMessage) {
             welcomeMessage.remove();
@@ -467,7 +463,6 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
             ? `<div class="p-2 rounded-full bg-green-600 text-white flex-shrink-0"><i data-lucide="user" class="w-5 h-5"></i></div>`
             : `<div class="p-2 rounded-full bg-gray-300 dark:bg-gray-700 text-green-500 flex-shrink-0"><i data-lucide="bot" class="w-5 h-5"></i></div>`;
 
-        // User message o'ng tomonda ko'rinishi uchun
         if (role === 'user') {
             messageElement.innerHTML = `
                 <div class="flex-1 min-w-0 prose dark:prose-invert text-right" style="max-width: 100%;">
@@ -478,7 +473,6 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
             messageElement.classList.add('justify-end', 'bg-green-50', 'dark:bg-gray-800');
             messageElement.classList.remove('justify-start', 'bg-gray-100', 'dark:bg-gray-700');
         } else {
-            // Model message chap tomonda ko'rinishi uchun
             messageElement.innerHTML = `
                 ${iconHtml}
                 <div class="flex-1 min-w-0 prose dark:prose-invert text-left" style="max-width: 100%;">
@@ -493,8 +487,7 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
         lucide.createIcons();
         chatContainer.scrollTop = chatContainer.scrollHeight;
         
-        // Historyni saqlash
-        if (text !== '...') { // Typing indicator uchun qo'shilgan elementni saqlamaymiz
+        if (text !== '...') { 
             chatHistory.push({ role: role, parts: [{ text: text }] });
             conversations[currentConversationId] = chatHistory;
             updateConversationHistory();
@@ -519,7 +512,7 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
 
     const showTypingIndicator = () => {
         const indicator = document.getElementById('typing-indicator');
-        if (indicator) return; // Agar mavjud bo'lsa, qayta yaratma
+        if (indicator) return; 
         const indicatorHtml = `
             <div id="typing-indicator" class="message p-4 rounded-xl max-w-4xl mx-auto flex gap-4 items-start bg-gray-100 dark:bg-gray-700 self-start bg-model w-full">
                 <div class="p-2 rounded-full bg-gray-300 dark:bg-gray-700 text-green-500 flex-shrink-0"><i data-lucide="bot" class="w-5 h-5"></i></div>
@@ -541,7 +534,6 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
 
     const updateConversationHistory = () => {
         conversationHistory.innerHTML = '';
-        // Suhbatlarni sanaga qarab saralash (oxirgisi birinchi)
         const conversationIds = Object.keys(conversations).sort((a, b) => b - a);
         
         conversationIds.forEach(id => {
@@ -560,7 +552,7 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
                 }
 
                 item.dataset.id = id;
-                item.title = title; // To'liq sarlavha uchun
+                item.title = title; 
                 item.innerHTML = `<i data-lucide="message-square" class="w-4 h-4 flex-shrink-0"></i> <span class="truncate">${title}</span>`;
                 item.onclick = () => loadConversation(id);
                 conversationHistory.appendChild(item);
@@ -573,7 +565,7 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
 
     const loadConversation = (id) => {
         if (currentConversationId && conversations[currentConversationId] && chatHistory.length > 0) {
-            conversations[currentConversationId] = chatHistory; // Joriy suhbatni saqlash
+            conversations[currentConversationId] = chatHistory; 
         }
         
         currentConversationId = id;
@@ -584,7 +576,6 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
             addMessage(msg.role, msg.parts[0].text);
         });
 
-        // Chat konteyner bo'sh qolsa xush kelibsiz xabarini ko'rsatish
         if (chatHistory.length === 0) {
             chatContainer.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full text-center welcome-message">
@@ -600,40 +591,6 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
         if (window.innerWidth < 640) {
             toggleSidebar(false);
         }
-    };
-
-    const loadState = () => {
-        const savedConversations = localStorage.getItem('conversations');
-        if (savedConversations) {
-            try {
-                conversations = JSON.parse(savedConversations);
-                const conversationIds = Object.keys(conversations).sort((a, b) => b - a);
-                if (conversationIds.length > 0) {
-                    loadConversation(conversationIds[0]);
-                } else {
-                    createNewConversation();
-                }
-            } catch (e) {
-                conversations = {};
-                createNewConversation();
-            }
-        } else {
-            createNewConversation();
-        }
-
-        // Theme management
-        const savedTheme = localStorage.getItem('theme');
-        const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (isDark) {
-            document.documentElement.classList.add('dark');
-            themeIcon.dataset.lucide = 'moon';
-            themeText.textContent = 'Dark Mode';
-        } else {
-            document.documentElement.classList.remove('dark');
-            themeIcon.dataset.lucide = 'sun';
-            themeText.textContent = 'Light Mode';
-        }
-        lucide.createIcons();
     };
 
     const toggleTheme = () => {
@@ -664,16 +621,48 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
         }
     };
 
-    // --- Event Listeners (Tugallanmagan qism shu yerda edi) ---
+    const loadState = () => {
+        const savedConversations = localStorage.getItem('conversations');
+        if (savedConversations) {
+            try {
+                conversations = JSON.parse(savedConversations);
+                const conversationIds = Object.keys(conversations).sort((a, b) => b - a);
+                if (conversationIds.length > 0) {
+                    loadConversation(conversationIds[0]);
+                } else {
+                    createNewConversation();
+                }
+            } catch (e) {
+                conversations = {};
+                createNewConversation();
+            }
+        } else {
+            createNewConversation();
+        }
 
-    // Send Message
+        const savedTheme = localStorage.getItem('theme');
+        const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+            themeIcon.dataset.lucide = 'moon';
+            themeText.textContent = 'Dark Mode';
+        } else {
+            document.documentElement.classList.remove('dark');
+            themeIcon.dataset.lucide = 'sun';
+            themeText.textContent = 'Light Mode';
+        }
+        lucide.createIcons();
+    };
+
+    // --- Event Listeners ---
+
+    // Send Message Logic
     const sendMessage = () => {
         const userMessage = messageInput.value.trim();
         if (userMessage) {
             addMessage('user', userMessage);
             callGeminiAPI(userMessage);
             messageInput.value = '';
-            // Input balandligini asl holiga qaytarish
             messageInput.style.height = 'auto';
             messageInput.rows = 1; 
         }
@@ -691,7 +680,7 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
     messageInput.addEventListener('input', () => {
         messageInput.style.height = 'auto';
         messageInput.style.height = messageInput.scrollHeight + 'px';
-        if (messageInput.scrollHeight > 150) { // Maksimal balandlikni cheklash
+        if (messageInput.scrollHeight > 150) { 
              messageInput.style.overflowY = 'scroll';
         } else {
              messageInput.style.overflowY = 'hidden';
@@ -736,7 +725,7 @@ Quyidagi qidiruv natijasi (agar mavjud bo'lsa) javob uchun kontekst sifatida ish
         }
     });
 
-    // Appni yuklash
+    // Appni yuklash (Boshlang'ich holatni chaqirish)
     loadState();
 });
 </script>
