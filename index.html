@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🟢 API KALITINI KIRITISH JOYI! 🟢
     // Iltimos, o'zingizning haqiqiy kalitingizni TIRNOQLAR ICHIGA joylashtiring.
-    const API_KEY = "AIzaSyDaIKpwFQDD4kkQSTC-3PYGIefrnKIiHOE"; // <<< SHU YERGA O'Z KALITINGIZNI KIRITING!!!
+    const API_KEY = "AIzaSyAcGGQPWl6e6J7gprDeFhBW9vK8LtWPviQ"; // <<< SHU YERGA O'Z KALITINGIZNI KIRITING!!!
 
     // Model va URL konfiguratsiyasi
     const MODEL_NAME = "gemini-1.5-flash"; 
@@ -314,9 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // API Call Logic
     const callGeminiAPI = async (userMessage) => {
         // API_KEY tekshiruvi (faqat kalitni kiritilganini va uzunligini tekshiradi)
-        if (!API_KEY || API_KEY === "YOUR_API_KEY_HERE" || API_KEY.length < 30) {
-            showModal(rateLimitModal);
-            addMessage('model', "Iltimos, kod ichidagi `API_KEY` o'zgaruvchisiga o'zingizning haqiqiy Gemini API kalitingizni kiriting.");
+        if (!API_KEY || API_KEY === "AIzaSyAcGGQPWl6e6J7gprDeFhBW9vK8LtWPviQ") {
+            addMessage('model', "Iltimos, kalitni kiriting. Xatolik haqida ogohlantirish o'chirildi.");
             return;
         }
 
