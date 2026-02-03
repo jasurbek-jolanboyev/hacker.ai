@@ -526,11 +526,10 @@
             }
 
             document.addEventListener('DOMContentLoaded', () => {
-
-                // 1. SERVER MANZILI (Renderga yuklaganda o'zgartirasiz)
+                // 🟢 CONFIGURATION 🟢
                 const SERVER_URL = "https://deaf-2k3f.onrender.com";
 
-                // 2. DOM ELEMENTLARI
+                // 🟢 DOM ELEMENTS 🟢
                 const elements = {
                     input: document.getElementById('message-input'),
                     sendBtn: document.getElementById('send-button'),
@@ -558,18 +557,20 @@
                     }
                 };
 
-                // 3. STATE MANAGEMENT
+                // 🟢 STATE MANAGEMENT 🟢
                 let state = {
                     history: [],
                     conversations: JSON.parse(localStorage.getItem('defcon_conversations') || '{}'),
                     currentId: null
                 };
 
-                // 4. XABAR YUBORISH FUNKSIYASI (ASOSIY O'ZGARISH)
+                // 🟢 CORE FUNCTIONS 🟢
+
                 async function handleSend() {
                     const text = elements.input.value.trim();
                     if (!text) return;
 
+                    // UI tayyorlash
                     elements.input.value = '';
                     elements.input.style.height = 'auto';
                     if (elements.welcomeScreen) elements.welcomeScreen.remove();
@@ -601,13 +602,71 @@
                     } catch (error) {
                         removeTyping();
                         console.error("Xatolik:", error);
-                        addMessage('model', `**SYSTEM ERROR:** ${error.message}`);
+                        addMessage('model', `**SYSTEM ERROR:** ${error.message}. Serveringizni tekshiring.`);
                     }
                 }
 
-                // 5. HODISALARNI BOG'LASH (Event Listeners)
-                elements.sendBtn.onclick = handleSend;
+                function addMessage(role, text) {
+                    const div = document.createElement('div');
+                    div.className = `p-4 rounded-xl animate-slide-in ${role === 'user' ? 'msg-user ml-auto max-w-[80%]' : 'msg-model mr-auto max-w-[90%]'}`;
 
+                    const header = role === 'model' ? '<p class="text-[10px] text-[#00ff41] font-bold mb-2 tracking-tighter">Cyber Intelligence Unit — DEFCON AI</p>' : '';
+
+                    div.innerHTML = `
+            ${header}
+            <div class="prose prose-invert prose-sm max-w-none text-sm leading-relaxed font-mono">
+                ${marked.parse(text)}
+            </div>
+        `;
+
+                    elements.chatContainer.appendChild(div);
+                    div.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+                    scrollToBottom();
+                }
+
+                function showTyping() {
+                    const div = document.createElement('div');
+                    div.id = 'typing-indicator';
+                    div.className = 'msg-model mr-auto p-4 rounded-xl flex items-center gap-1';
+                    div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+                    elements.chatContainer.appendChild(div);
+                    scrollToBottom();
+                }
+
+                function removeTyping() {
+                    const indicator = document.getElementById('typing-indicator');
+                    if (indicator) indicator.remove();
+                }
+
+                function scrollToBottom() {
+                    elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+                }
+
+                function saveCurrentChat() {
+                    if (!state.currentId) state.currentId = 'chat_' + Date.now();
+                    state.conversations[state.currentId] = {
+                        id: state.currentId,
+                        history: state.history,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
+                }
+
+                function startNewChat() {
+                    elements.chatContainer.innerHTML = '';
+                    state.history = [];
+                    state.currentId = null;
+                    elements.chatContainer.appendChild(elements.welcomeScreen);
+                }
+
+                function toggleModal(name, show) {
+                    const modal = elements.modals[name];
+                    if (show) modal.classList.remove('hidden');
+                    else modal.classList.add('hidden');
+                }
+
+                // 🟢 EVENT LISTENERS 🟢
+                elements.sendBtn.onclick = handleSend;
                 elements.input.onkeydown = (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -615,7 +674,29 @@
                     }
                 };
 
-                // Boshqa yordamchi funksiyalar (addMessage, showTyping, saveCurrentChat va h.k.) pastdan davom etadi...
+                elements.newChatBtn.onclick = startNewChat;
+                elements.buttons.settings.onclick = () => toggleModal('settings', true);
+                elements.buttons.about.onclick = () => toggleModal('about', true);
+                elements.buttons.sponsors.onclick = () => toggleModal('sponsors', true);
+
+                elements.buttons.closeModal.forEach(btn => {
+                    btn.onclick = () => {
+                        Object.values(elements.modals).forEach(m => m.classList.add('hidden'));
+                    };
+                });
+
+                elements.menuToggle.onclick = () => {
+                    elements.sidebar.classList.remove('-translate-x-full');
+                    elements.overlay.classList.remove('hidden');
+                };
+
+                elements.overlay.onclick = () => {
+                    elements.sidebar.classList.add('-translate-x-full');
+                    elements.overlay.classList.add('hidden');
+                };
+
+                // Initialize Icons
+                lucide.createIcons();
             });
             // Initial Setup
             lucide.createIcons();
