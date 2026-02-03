@@ -32,7 +32,7 @@ JAVOB USLUBI:
 
 # Modelni eng yuqori imkoniyatlar bilan sozlash
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash", # Yoki gemini-1.5-pro (agar limitingiz yuqori bo'lsa)
+    model_name="gemini-2.5-flash", # Yoki gemini-1.5-pro (agar limitingiz yuqori bo'lsa)
     system_instruction=ULTIMATE_SYSTEM_PROMPT,
     generation_config={
         "temperature": 0.2, # Super-intellektual mantiqiy bog'lanishlar uchun

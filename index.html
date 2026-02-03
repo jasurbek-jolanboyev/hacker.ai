@@ -474,132 +474,132 @@
             </div>
         </div>
     </div>
-   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // 🟢 1. CONFIGURATION
-        const SERVER_URL = "https://deaf-2k3f.onrender.com";
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 🟢 1. CONFIGURATION
+            const SERVER_URL = "https://deaf-2k3f.onrender.com";
 
-        // 🟢 2. DOM ELEMENTS
-        const elements = {
-            input: document.getElementById('message-input'),
-            sendBtn: document.getElementById('send-button'),
-            chatContainer: document.getElementById('chat-container'),
-            welcomeScreen: document.getElementById('welcome-screen'),
-            newChatBtn: document.getElementById('new-chat-btn'),
-            history: document.getElementById('conversation-history'),
-            sidebar: document.getElementById('sidebar'),
-            menuToggle: document.getElementById('menu-toggle'),
-            overlay: document.getElementById('overlay'),
-            scanningLine: document.getElementById('scanning-line'),
-            fileUpload: document.getElementById('file-upload'),
-            modals: {
-                settings: document.getElementById('settings-modal'),
-                about: document.getElementById('about-modal'),
-                sponsors: document.getElementById('sponsors-modal'),
-                error: document.getElementById('error-modal')
-            },
-            buttons: {
-                settings: document.getElementById('settings-btn'),
-                about: document.getElementById('about-btn'),
-                sponsors: document.getElementById('sponsors-btn'),
-                clear: document.getElementById('clear-chat-btn'),
-                malwareLab: document.getElementById('malware-lab-btn'),
-                closeModal: document.querySelectorAll('.close-modal')
-            }
-        };
+            // 🟢 2. DOM ELEMENTS
+            const elements = {
+                input: document.getElementById('message-input'),
+                sendBtn: document.getElementById('send-button'),
+                chatContainer: document.getElementById('chat-container'),
+                welcomeScreen: document.getElementById('welcome-screen'),
+                newChatBtn: document.getElementById('new-chat-btn'),
+                history: document.getElementById('conversation-history'),
+                sidebar: document.getElementById('sidebar'),
+                menuToggle: document.getElementById('menu-toggle'),
+                overlay: document.getElementById('overlay'),
+                scanningLine: document.getElementById('scanning-line'),
+                fileUpload: document.getElementById('file-upload'),
+                modals: {
+                    settings: document.getElementById('settings-modal'),
+                    about: document.getElementById('about-modal'),
+                    sponsors: document.getElementById('sponsors-modal'),
+                    error: document.getElementById('error-modal')
+                },
+                buttons: {
+                    settings: document.getElementById('settings-btn'),
+                    about: document.getElementById('about-btn'),
+                    sponsors: document.getElementById('sponsors-btn'),
+                    clear: document.getElementById('clear-chat-btn'),
+                    malwareLab: document.getElementById('malware-lab-btn'),
+                    closeModal: document.querySelectorAll('.close-modal')
+                }
+            };
 
-        // 🟢 3. STATE MANAGEMENT
-        let state = {
-            history: [],
-            conversations: JSON.parse(localStorage.getItem('defcon_conversations') || '{}'),
-            currentId: Date.now().toString()
-        };
+            // 🟢 3. STATE MANAGEMENT
+            let state = {
+                history: [],
+                conversations: JSON.parse(localStorage.getItem('defcon_conversations') || '{}'),
+                currentId: Date.now().toString()
+            };
 
-        // 🟢 4. CORE FUNCTIONS
+            // 🟢 4. CORE FUNCTIONS
 
-        async function handleSend() {
-            const text = elements.input.value.trim();
-            if (!text) return;
+            async function handleSend() {
+                const text = elements.input.value.trim();
+                if (!text) return;
 
-            // UI-ni tozalash
-            elements.input.value = '';
-            elements.input.style.height = 'auto';
-            if (elements.welcomeScreen) elements.welcomeScreen.remove();
+                // UI-ni tozalash
+                elements.input.value = '';
+                elements.input.style.height = 'auto';
+                if (elements.welcomeScreen) elements.welcomeScreen.remove();
 
-            addMessage('user', text);
-            showTyping();
+                addMessage('user', text);
+                showTyping();
 
-            try {
-                const response = await fetch(`${SERVER_URL}/api/chat`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        message: text,
-                        history: state.history
-                    })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || "Server xatosi");
-
-                removeTyping();
-                addMessage('model', data.reply);
-
-                // Tarixni yangilash
-                state.history.push({ role: "user", parts: [{ text: text }] });
-                state.history.push({ role: "model", parts: [{ text: data.reply }] });
-                saveConversation();
-
-            } catch (error) {
-                removeTyping();
-                console.error("Xatolik:", error);
-                addMessage('model', `**SYSTEM ERROR:** ${error.message}. Iltimos, Render paneli yoniqligini tekshiring.`);
-            }
-        }
-
-        async function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            showScanningLine(true);
-            if (elements.welcomeScreen) elements.welcomeScreen.remove();
-            addMessage('user', `Fayl yuklandi: ${file.name}. Chuqur tahlil boshlandi...`);
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64Data = e.target.result.split(',')[1];
                 try {
-                    const response = await fetch(`${SERVER_URL}/api/analyze-file`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                    const response = await fetch(`${SERVER_URL}/api/chat`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            fileName: file.name,
-                            mimeType: file.type,
-                            fileData: base64Data
+                            message: text,
+                            history: state.history
                         })
                     });
 
                     const data = await response.json();
-                    if (data.error) throw new Error(data.error);
+                    if (!response.ok) throw new Error(data.error || "Server xatosi");
 
-                    showScanningLine(false);
-                    addMessage('model', data.analysis);
+                    removeTyping();
+                    addMessage('model', data.reply);
+
+                    // Tarixni yangilash
+                    state.history.push({ role: "user", parts: [{ text: text }] });
+                    state.history.push({ role: "model", parts: [{ text: data.reply }] });
+                    saveConversation();
+
                 } catch (error) {
-                    showScanningLine(false);
-                    addMessage('model', `**ANALYTICS ERROR:** ${error.message}`);
+                    removeTyping();
+                    console.error("Xatolik:", error);
+                    addMessage('model', `**SYSTEM ERROR:** ${error.message}. Iltimos, Render paneli yoniqligini tekshiring.`);
                 }
-            };
-            reader.readAsDataURL(file);
-        }
+            }
 
-        // 🟢 5. UI HELPERS
+            async function handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-        function addMessage(role, text) {
-            const div = document.createElement('div');
-            div.className = `flex gap-4 max-w-4xl w-full animate-slide-in ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
-            
-            const htmlContent = marked.parse(text);
-            div.innerHTML = `
+                showScanningLine(true);
+                if (elements.welcomeScreen) elements.welcomeScreen.remove();
+                addMessage('user', `Fayl yuklandi: ${file.name}. Chuqur tahlil boshlandi...`);
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64Data = e.target.result.split(',')[1];
+                    try {
+                        const response = await fetch(`${SERVER_URL}/api/analyze-file`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                fileName: file.name,
+                                mimeType: file.type,
+                                fileData: base64Data
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (data.error) throw new Error(data.error);
+
+                        showScanningLine(false);
+                        addMessage('model', data.analysis);
+                    } catch (error) {
+                        showScanningLine(false);
+                        addMessage('model', `**ANALYTICS ERROR:** ${error.message}`);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // 🟢 5. UI HELPERS
+
+            function addMessage(role, text) {
+                const div = document.createElement('div');
+                div.className = `flex gap-4 max-w-4xl w-full animate-slide-in ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
+
+                const htmlContent = marked.parse(text);
+                div.innerHTML = `
                 ${role === 'model' ? `<div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
                 <div class="${role === 'user' ? 'msg-user text-right' : 'msg-model text-left'} p-4 max-w-[85%] prose prose-invert prose-p:leading-relaxed">
                     ${role === 'model' ? '<p class="text-[10px] text-[#00ff41] font-bold mb-2 tracking-tighter uppercase">Cyber Intelligence Unit — DEFCON AI</p>' : ''}
@@ -608,166 +608,166 @@
                 ${role === 'user' ? `<div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
             `;
 
-            elements.chatContainer.appendChild(div);
-            div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-            
-            // Code copy logic
-            div.querySelectorAll('pre').forEach(pre => {
-                const btn = document.createElement('button');
-                btn.className = 'copy-btn';
-                btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
-                btn.onclick = () => {
-                    navigator.clipboard.writeText(pre.innerText.replace('Copy', ''));
-                    btn.innerHTML = 'Copied!';
-                    setTimeout(() => { btn.innerHTML = 'Copy'; lucide.createIcons(); }, 2000);
-                };
-                pre.appendChild(btn);
-            });
+                elements.chatContainer.appendChild(div);
+                div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
 
-            lucide.createIcons();
-            scrollToBottom();
-        }
+                // Code copy logic
+                div.querySelectorAll('pre').forEach(pre => {
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
+                    btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
+                    btn.onclick = () => {
+                        navigator.clipboard.writeText(pre.innerText.replace('Copy', ''));
+                        btn.innerHTML = 'Copied!';
+                        setTimeout(() => { btn.innerHTML = 'Copy'; lucide.createIcons(); }, 2000);
+                    };
+                    pre.appendChild(btn);
+                });
 
-        function showTyping() {
-            const div = document.createElement('div');
-            div.id = 'typing-indicator';
-            div.className = 'flex gap-4 max-w-4xl w-full justify-start mr-auto animate-slide-in';
-            div.innerHTML = `
+                lucide.createIcons();
+                scrollToBottom();
+            }
+
+            function showTyping() {
+                const div = document.createElement('div');
+                div.id = 'typing-indicator';
+                div.className = 'flex gap-4 max-w-4xl w-full justify-start mr-auto animate-slide-in';
+                div.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0"><i data-lucide="loader-2" class="w-4 h-4 text-[#00ff41] animate-spin"></i></div>
                 <div class="msg-model p-4 flex items-center gap-1">
                     <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
                 </div>
             `;
-            elements.chatContainer.appendChild(div);
-            scrollToBottom();
-            lucide.createIcons();
-        }
+                elements.chatContainer.appendChild(div);
+                scrollToBottom();
+                lucide.createIcons();
+            }
 
-        function removeTyping() {
-            const el = document.getElementById('typing-indicator');
-            if (el) el.remove();
-        }
+            function removeTyping() {
+                const el = document.getElementById('typing-indicator');
+                if (el) el.remove();
+            }
 
-        function scrollToBottom() {
-            elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
-        }
+            function scrollToBottom() {
+                elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+            }
 
-        function showScanningLine(show) {
-            elements.scanningLine.style.display = show ? 'block' : 'none';
-        }
+            function showScanningLine(show) {
+                elements.scanningLine.style.display = show ? 'block' : 'none';
+            }
 
-        // 🟢 6. SIDEBAR & HISTORY LOGIC
+            // 🟢 6. SIDEBAR & HISTORY LOGIC
 
-        function saveConversation() {
-            if (state.history.length > 0) {
-                state.conversations[state.currentId] = state.history;
-                localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
+            function saveConversation() {
+                if (state.history.length > 0) {
+                    state.conversations[state.currentId] = state.history;
+                    localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
+                    renderHistory();
+                }
+            }
+
+            function renderHistory() {
+                elements.history.innerHTML = '';
+                const ids = Object.keys(state.conversations).reverse();
+                if (ids.length === 0) {
+                    elements.history.innerHTML = '<p class="text-gray-600 text-[10px] text-center mt-4 uppercase">No logs found</p>';
+                    return;
+                }
+                ids.forEach(id => {
+                    const chat = state.conversations[id];
+                    const firstMsg = chat[0]?.parts[0]?.text || "New Session";
+                    const title = firstMsg.length > 20 ? firstMsg.substring(0, 20) + '...' : firstMsg;
+
+                    const btn = document.createElement('button');
+                    btn.className = `sidebar-link w-full text-left p-3 rounded flex items-center gap-3 text-xs truncate mb-1 ${id === state.currentId ? 'active' : 'text-gray-400'}`;
+                    btn.innerHTML = `<i data-lucide="terminal-square" class="w-3 h-3"></i> <span>${title}</span>`;
+                    btn.onclick = () => loadConversation(id);
+                    elements.history.appendChild(btn);
+                });
+                lucide.createIcons();
+            }
+
+            function loadConversation(id) {
+                state.currentId = id;
+                state.history = state.conversations[id] || [];
+                elements.chatContainer.innerHTML = '';
+                state.history.forEach(msg => addMessage(msg.role, msg.parts[0].text));
+                if (window.innerWidth < 640) toggleSidebar(false);
+            }
+
+            function startNewChat() {
+                state.currentId = Date.now().toString();
+                state.history = [];
+                elements.chatContainer.innerHTML = '';
+                elements.chatContainer.appendChild(createWelcomeScreen());
+                if (window.innerWidth < 640) toggleSidebar(false);
                 renderHistory();
             }
-        }
 
-        function renderHistory() {
-            elements.history.innerHTML = '';
-            const ids = Object.keys(state.conversations).reverse();
-            if (ids.length === 0) {
-                elements.history.innerHTML = '<p class="text-gray-600 text-[10px] text-center mt-4 uppercase">No logs found</p>';
-                return;
-            }
-            ids.forEach(id => {
-                const chat = state.conversations[id];
-                const firstMsg = chat[0]?.parts[0]?.text || "New Session";
-                const title = firstMsg.length > 20 ? firstMsg.substring(0, 20) + '...' : firstMsg;
-                
-                const btn = document.createElement('button');
-                btn.className = `sidebar-link w-full text-left p-3 rounded flex items-center gap-3 text-xs truncate mb-1 ${id === state.currentId ? 'active' : 'text-gray-400'}`;
-                btn.innerHTML = `<i data-lucide="terminal-square" class="w-3 h-3"></i> <span>${title}</span>`;
-                btn.onclick = () => loadConversation(id);
-                elements.history.appendChild(btn);
-            });
-            lucide.createIcons();
-        }
-
-        function loadConversation(id) {
-            state.currentId = id;
-            state.history = state.conversations[id] || [];
-            elements.chatContainer.innerHTML = '';
-            state.history.forEach(msg => addMessage(msg.role, msg.parts[0].text));
-            if (window.innerWidth < 640) toggleSidebar(false);
-        }
-
-        function startNewChat() {
-            state.currentId = Date.now().toString();
-            state.history = [];
-            elements.chatContainer.innerHTML = '';
-            elements.chatContainer.appendChild(createWelcomeScreen());
-            if (window.innerWidth < 640) toggleSidebar(false);
-            renderHistory();
-        }
-
-        function createWelcomeScreen() {
-            const div = document.createElement('div');
-            div.id = 'welcome-screen';
-            div.className = 'flex flex-col items-center justify-center h-full text-center animate-slide-in';
-            div.innerHTML = `
+            function createWelcomeScreen() {
+                const div = document.createElement('div');
+                div.id = 'welcome-screen';
+                div.className = 'flex flex-col items-center justify-center h-full text-center animate-slide-in';
+                div.innerHTML = `
                 <div class="w-24 h-24 rounded-full border border-[#00ff41]/50 flex items-center justify-center mb-6 bg-[#00ff41]/5">
                     <i data-lucide="lock-keyhole" class="w-10 h-10 text-[#00ff41]"></i>
                 </div>
                 <h2 class="text-3xl font-bold mb-3 text-white">DEFCON <span class="text-[#00ff41]">INTELLIGENCE</span></h2>
                 <p class="text-gray-400 max-w-md text-sm">Secure Terminal Activated. Ready for commands.</p>
             `;
+                lucide.createIcons();
+                return div;
+            }
+
+            function toggleSidebar(show) {
+                if (show) {
+                    elements.sidebar.classList.remove('-translate-x-full');
+                    elements.overlay.classList.remove('hidden');
+                } else {
+                    elements.sidebar.classList.add('-translate-x-full');
+                    elements.overlay.classList.add('hidden');
+                }
+            }
+
+            // 🟢 7. EVENT LISTENERS
+
+            elements.sendBtn.onclick = handleSend;
+            elements.input.onkeydown = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                }
+            };
+
+            elements.newChatBtn.onclick = startNewChat;
+            elements.fileUpload.onchange = handleFileUpload;
+            elements.menuToggle.onclick = () => toggleSidebar(true);
+            elements.overlay.onclick = () => toggleSidebar(false);
+
+            elements.buttons.settings.onclick = () => elements.modals.settings.classList.remove('hidden');
+            elements.buttons.about.onclick = () => elements.modals.about.classList.remove('hidden');
+            elements.buttons.sponsors.onclick = () => elements.modals.sponsors.classList.remove('hidden');
+            elements.buttons.clear.onclick = () => {
+                if (confirm("DIQQAT: Barcha chat tarixi o'chiriladi. Davom etasizmi?")) {
+                    localStorage.removeItem('defcon_conversations');
+                    state.conversations = {};
+                    startNewChat();
+                }
+            };
+
+            if (elements.buttons.malwareLab) {
+                elements.buttons.malwareLab.onclick = () => window.location.href = 'malware-lab.html';
+            }
+
+            elements.buttons.closeModal.forEach(btn => {
+                btn.onclick = () => Object.values(elements.modals).forEach(m => m.classList.add('hidden'));
+            });
+
+            // Initialize Icons & History
             lucide.createIcons();
-            return div;
-        }
-
-        function toggleSidebar(show) {
-            if (show) {
-                elements.sidebar.classList.remove('-translate-x-full');
-                elements.overlay.classList.remove('hidden');
-            } else {
-                elements.sidebar.classList.add('-translate-x-full');
-                elements.overlay.classList.add('hidden');
-            }
-        }
-
-        // 🟢 7. EVENT LISTENERS
-
-        elements.sendBtn.onclick = handleSend;
-        elements.input.onkeydown = (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-            }
-        };
-
-        elements.newChatBtn.onclick = startNewChat;
-        elements.fileUpload.onchange = handleFileUpload;
-        elements.menuToggle.onclick = () => toggleSidebar(true);
-        elements.overlay.onclick = () => toggleSidebar(false);
-        
-        elements.buttons.settings.onclick = () => elements.modals.settings.classList.remove('hidden');
-        elements.buttons.about.onclick = () => elements.modals.about.classList.remove('hidden');
-        elements.buttons.sponsors.onclick = () => elements.modals.sponsors.classList.remove('hidden');
-        elements.buttons.clear.onclick = () => {
-            if(confirm("DIQQAT: Barcha chat tarixi o'chiriladi. Davom etasizmi?")) {
-                localStorage.removeItem('defcon_conversations');
-                state.conversations = {};
-                startNewChat();
-            }
-        };
-
-        if (elements.buttons.malwareLab) {
-            elements.buttons.malwareLab.onclick = () => window.location.href = 'malware-lab.html';
-        }
-
-        elements.buttons.closeModal.forEach(btn => {
-            btn.onclick = () => Object.values(elements.modals).forEach(m => m.classList.add('hidden'));
+            renderHistory();
         });
-
-        // Initialize Icons & History
-        lucide.createIcons();
-        renderHistory();
-    });
-</script>
+    </script>
 </body>
 
 </html>
