@@ -594,32 +594,49 @@
 
             // 🟢 5. UI HELPERS
 
-            function addMessage(role, text) {
+function addMessage(role, text) {
                 const div = document.createElement('div');
+                // Foydalanuvchi va AI xabarlarini o'ng/chapga tekislash
                 div.className = `flex gap-4 max-w-4xl w-full animate-slide-in ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
 
                 const htmlContent = marked.parse(text);
+                
+                // DIQQAT: Sarlavha (Cyber Intelligence...) bu yerdan olib tashlandi
                 div.innerHTML = `
-                ${role === 'model' ? `<div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
-                <div class="${role === 'user' ? 'msg-user text-right' : 'msg-model text-left'} p-4 max-w-[85%] prose prose-invert prose-p:leading-relaxed">
-                    ${role === 'model' ? '<p class="text-[10px] text-[#00ff41] font-bold mb-2 tracking-tighter uppercase">Cyber Intelligence Unit — DEFCON AI</p>' : ''}
-                    ${htmlContent}
-                </div>
-                ${role === 'user' ? `<div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
-            `;
+                    ${role === 'model' ? `
+                        <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1">
+                            <i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i>
+                        </div>` : ''}
+                    
+                    <div class="${role === 'user' ? 'msg-user text-right' : 'msg-model text-left'} p-4 max-w-[85%] prose prose-invert prose-p:leading-relaxed">
+                        ${htmlContent}
+                    </div>
+
+                    ${role === 'user' ? `
+                        <div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1">
+                            <i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i>
+                        </div>` : ''}
+                `;
 
                 elements.chatContainer.appendChild(div);
+                
+                // Kodlarni rangli qilish (Syntax Highlighting)
                 div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
 
-                // Code copy logic
+                // Kod bloklari uchun nusxalash (Copy) tugmasi
                 div.querySelectorAll('pre').forEach(pre => {
                     const btn = document.createElement('button');
                     btn.className = 'copy-btn';
                     btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
                     btn.onclick = () => {
-                        navigator.clipboard.writeText(pre.innerText.replace('Copy', ''));
-                        btn.innerHTML = 'Copied!';
-                        setTimeout(() => { btn.innerHTML = 'Copy'; lucide.createIcons(); }, 2000);
+                        // "Copy" so'zi matnga qo'shilib ketmasligi uchun tozalash
+                        const codeToCopy = pre.querySelector('code').innerText;
+                        navigator.clipboard.writeText(codeToCopy);
+                        btn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Copied!';
+                        setTimeout(() => { 
+                            btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy'; 
+                            lucide.createIcons(); 
+                        }, 2000);
                     };
                     pre.appendChild(btn);
                 });
@@ -633,11 +650,13 @@
                 div.id = 'typing-indicator';
                 div.className = 'flex gap-4 max-w-4xl w-full justify-start mr-auto animate-slide-in';
                 div.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0"><i data-lucide="loader-2" class="w-4 h-4 text-[#00ff41] animate-spin"></i></div>
-                <div class="msg-model p-4 flex items-center gap-1">
-                    <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-                </div>
-            `;
+                    <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="loader-2" class="w-4 h-4 text-[#00ff41] animate-spin"></i>
+                    </div>
+                    <div class="msg-model p-4 flex items-center gap-1">
+                        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                    </div>
+                `;
                 elements.chatContainer.appendChild(div);
                 scrollToBottom();
                 lucide.createIcons();
@@ -649,13 +668,18 @@
             }
 
             function scrollToBottom() {
-                elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+                // Silliq siljish effekti bilan pastga tushish
+                elements.chatContainer.scrollTo({
+                    top: elements.chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
             }
 
             function showScanningLine(show) {
-                elements.scanningLine.style.display = show ? 'block' : 'none';
+                if (elements.scanningLine) {
+                    elements.scanningLine.style.display = show ? 'block' : 'none';
+                }
             }
-
             // 🟢 6. SIDEBAR & HISTORY LOGIC
 
             function saveConversation() {
