@@ -474,545 +474,300 @@
             </div>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 🟢 CONFIGURATION & API 🟢
-            // index.html ichidagi handleSend funksiyasi
+   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 🟢 1. CONFIGURATION
+        const SERVER_URL = "https://deaf-2k3f.onrender.com";
 
-            async function handleSend() {
-                const text = elements.input.value.trim();
-                if (!text) return;
+        // 🟢 2. DOM ELEMENTS
+        const elements = {
+            input: document.getElementById('message-input'),
+            sendBtn: document.getElementById('send-button'),
+            chatContainer: document.getElementById('chat-container'),
+            welcomeScreen: document.getElementById('welcome-screen'),
+            newChatBtn: document.getElementById('new-chat-btn'),
+            history: document.getElementById('conversation-history'),
+            sidebar: document.getElementById('sidebar'),
+            menuToggle: document.getElementById('menu-toggle'),
+            overlay: document.getElementById('overlay'),
+            scanningLine: document.getElementById('scanning-line'),
+            fileUpload: document.getElementById('file-upload'),
+            modals: {
+                settings: document.getElementById('settings-modal'),
+                about: document.getElementById('about-modal'),
+                sponsors: document.getElementById('sponsors-modal'),
+                error: document.getElementById('error-modal')
+            },
+            buttons: {
+                settings: document.getElementById('settings-btn'),
+                about: document.getElementById('about-btn'),
+                sponsors: document.getElementById('sponsors-btn'),
+                clear: document.getElementById('clear-chat-btn'),
+                malwareLab: document.getElementById('malware-lab-btn'),
+                closeModal: document.querySelectorAll('.close-modal')
+            }
+        };
 
-                // UI-ni tozalash va tayyorlash
-                elements.input.value = '';
-                elements.input.style.height = 'auto';
-                if (elements.welcomeScreen) elements.welcomeScreen.remove();
+        // 🟢 3. STATE MANAGEMENT
+        let state = {
+            history: [],
+            conversations: JSON.parse(localStorage.getItem('defcon_conversations') || '{}'),
+            currentId: Date.now().toString()
+        };
 
-                // Foydalanuvchi xabarini ekranga chiqarish
-                addMessage('user', text);
-                showTyping();
+        // 🟢 4. CORE FUNCTIONS
 
+        async function handleSend() {
+            const text = elements.input.value.trim();
+            if (!text) return;
+
+            // UI-ni tozalash
+            elements.input.value = '';
+            elements.input.style.height = 'auto';
+            if (elements.welcomeScreen) elements.welcomeScreen.remove();
+
+            addMessage('user', text);
+            showTyping();
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/chat`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        message: text,
+                        history: state.history
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Server xatosi");
+
+                removeTyping();
+                addMessage('model', data.reply);
+
+                // Tarixni yangilash
+                state.history.push({ role: "user", parts: [{ text: text }] });
+                state.history.push({ role: "model", parts: [{ text: data.reply }] });
+                saveConversation();
+
+            } catch (error) {
+                removeTyping();
+                console.error("Xatolik:", error);
+                addMessage('model', `**SYSTEM ERROR:** ${error.message}. Iltimos, Render paneli yoniqligini tekshiring.`);
+            }
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showScanningLine(true);
+            if (elements.welcomeScreen) elements.welcomeScreen.remove();
+            addMessage('user', `Fayl yuklandi: ${file.name}. Chuqur tahlil boshlandi...`);
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64Data = e.target.result.split(',')[1];
                 try {
-                    // DIQQAT: API kalit endi bu yerda emas, app.py ichida bo'ladi!
-                    const response = await fetch("http://localhost:3000/api/chat", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
+                    const response = await fetch(`${SERVER_URL}/api/analyze-file`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            message: text,
-                            history: state.history // Kontekstni saqlash uchun tarixni yuboramiz
+                            fileName: file.name,
+                            mimeType: file.type,
+                            fileData: base64Data
                         })
                     });
 
                     const data = await response.json();
+                    if (data.error) throw new Error(data.error);
 
-                    if (!response.ok) {
-                        throw new Error(data.error || "Server bilan aloqa uzildi");
-                    }
-
-                    removeTyping();
-                    // Model javobini ekranga chiqarish va tarixga qo'shish
-                    addMessage('model', data.reply);
-
-                    // Chat tarixini saqlash
-                    saveCurrentChat();
-
+                    showScanningLine(false);
+                    addMessage('model', data.analysis);
                 } catch (error) {
-                    removeTyping();
-                    console.error("Xatolik:", error);
-                    addMessage('model', `**SYSTEM ERROR:** ${error.message}. Iltimos, serveringiz (app.py) yoqilganligini tekshiring.`);
+                    showScanningLine(false);
+                    addMessage('model', `**ANALYTICS ERROR:** ${error.message}`);
                 }
-            }
+            };
+            reader.readAsDataURL(file);
+        }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                // 🟢 CONFIGURATION 🟢
-                const SERVER_URL = "https://deaf-2k3f.onrender.com";
+        // 🟢 5. UI HELPERS
 
-                // 🟢 DOM ELEMENTS 🟢
-                const elements = {
-                    input: document.getElementById('message-input'),
-                    sendBtn: document.getElementById('send-button'),
-                    chatContainer: document.getElementById('chat-container'),
-                    welcomeScreen: document.getElementById('welcome-screen'),
-                    newChatBtn: document.getElementById('new-chat-btn'),
-                    history: document.getElementById('conversation-history'),
-                    sidebar: document.getElementById('sidebar'),
-                    menuToggle: document.getElementById('menu-toggle'),
-                    overlay: document.getElementById('overlay'),
-                    scanningLine: document.getElementById('scanning-line'),
-                    fileUpload: document.getElementById('file-upload'),
-                    modals: {
-                        settings: document.getElementById('settings-modal'),
-                        about: document.getElementById('about-modal'),
-                        sponsors: document.getElementById('sponsors-modal'),
-                        error: document.getElementById('error-modal')
-                    },
-                    buttons: {
-                        settings: document.getElementById('settings-btn'),
-                        about: document.getElementById('about-btn'),
-                        sponsors: document.getElementById('sponsors-btn'),
-                        clear: document.getElementById('clear-chat-btn'),
-                        closeModal: document.querySelectorAll('.close-modal')
-                    }
-                };
-
-                // 🟢 STATE MANAGEMENT 🟢
-                let state = {
-                    history: [],
-                    conversations: JSON.parse(localStorage.getItem('defcon_conversations') || '{}'),
-                    currentId: null
-                };
-
-                // 🟢 CORE FUNCTIONS 🟢
-
-                async function handleSend() {
-                    const text = elements.input.value.trim();
-                    if (!text) return;
-
-                    // UI tayyorlash
-                    elements.input.value = '';
-                    elements.input.style.height = 'auto';
-                    if (elements.welcomeScreen) elements.welcomeScreen.remove();
-
-                    addMessage('user', text);
-                    showTyping();
-
-                    try {
-                        const response = await fetch(`${SERVER_URL}/api/chat`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                message: text,
-                                history: state.history
-                            })
-                        });
-
-                        const data = await response.json();
-                        if (data.error) throw new Error(data.error);
-
-                        removeTyping();
-                        addMessage('model', data.reply);
-
-                        // Tarixni yangilash
-                        state.history.push({ role: "user", parts: [{ text: text }] });
-                        state.history.push({ role: "model", parts: [{ text: data.reply }] });
-                        saveCurrentChat();
-
-                    } catch (error) {
-                        removeTyping();
-                        console.error("Xatolik:", error);
-                        addMessage('model', `**SYSTEM ERROR:** ${error.message}. Serveringizni tekshiring.`);
-                    }
-                }
-
-                function addMessage(role, text) {
-                    const div = document.createElement('div');
-                    div.className = `p-4 rounded-xl animate-slide-in ${role === 'user' ? 'msg-user ml-auto max-w-[80%]' : 'msg-model mr-auto max-w-[90%]'}`;
-
-                    const header = role === 'model' ? '<p class="text-[10px] text-[#00ff41] font-bold mb-2 tracking-tighter">Cyber Intelligence Unit — DEFCON AI</p>' : '';
-
-                    div.innerHTML = `
-            ${header}
-            <div class="prose prose-invert prose-sm max-w-none text-sm leading-relaxed font-mono">
-                ${marked.parse(text)}
-            </div>
-        `;
-
-                    elements.chatContainer.appendChild(div);
-                    div.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
-                    scrollToBottom();
-                }
-
-                function showTyping() {
-                    const div = document.createElement('div');
-                    div.id = 'typing-indicator';
-                    div.className = 'msg-model mr-auto p-4 rounded-xl flex items-center gap-1';
-                    div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-                    elements.chatContainer.appendChild(div);
-                    scrollToBottom();
-                }
-
-                function removeTyping() {
-                    const indicator = document.getElementById('typing-indicator');
-                    if (indicator) indicator.remove();
-                }
-
-                function scrollToBottom() {
-                    elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
-                }
-
-                function saveCurrentChat() {
-                    if (!state.currentId) state.currentId = 'chat_' + Date.now();
-                    state.conversations[state.currentId] = {
-                        id: state.currentId,
-                        history: state.history,
-                        timestamp: Date.now()
-                    };
-                    localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
-                }
-
-                function startNewChat() {
-                    elements.chatContainer.innerHTML = '';
-                    state.history = [];
-                    state.currentId = null;
-                    elements.chatContainer.appendChild(elements.welcomeScreen);
-                }
-
-                function toggleModal(name, show) {
-                    const modal = elements.modals[name];
-                    if (show) modal.classList.remove('hidden');
-                    else modal.classList.add('hidden');
-                }
-
-                // 🟢 EVENT LISTENERS 🟢
-                elements.sendBtn.onclick = handleSend;
-                elements.input.onkeydown = (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
-                    }
-                };
-
-                elements.newChatBtn.onclick = startNewChat;
-                elements.buttons.settings.onclick = () => toggleModal('settings', true);
-                elements.buttons.about.onclick = () => toggleModal('about', true);
-                elements.buttons.sponsors.onclick = () => toggleModal('sponsors', true);
-
-                elements.buttons.closeModal.forEach(btn => {
-                    btn.onclick = () => {
-                        Object.values(elements.modals).forEach(m => m.classList.add('hidden'));
-                    };
-                });
-
-                elements.menuToggle.onclick = () => {
-                    elements.sidebar.classList.remove('-translate-x-full');
-                    elements.overlay.classList.remove('hidden');
-                };
-
-                elements.overlay.onclick = () => {
-                    elements.sidebar.classList.add('-translate-x-full');
-                    elements.overlay.classList.add('hidden');
-                };
-
-                // Initialize Icons
-                lucide.createIcons();
-            });
-            // Initial Setup
-            lucide.createIcons();
-            init();
-            // --- MAIN LOGIC FUNCTIONS ---
-            function init() {
-                renderHistory();
-                startNewChat(); // Start fresh or load latest
-                // Event Listeners
-                elements.sendBtn.addEventListener('click', handleSend);
-                elements.input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-                });
-                elements.newChatBtn.addEventListener('click', startNewChat);
-                elements.buttons.clear.addEventListener('click', clearAllData);
-                // Modals
-                elements.buttons.settings.addEventListener('click', () => toggleModal('settings', true));
-                elements.buttons.about.addEventListener('click', () => toggleModal('about', true));
-                elements.buttons.sponsors.addEventListener('click', () => toggleModal('sponsors', true));
-                elements.buttons.closeModal.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        Object.values(elements.modals).forEach(m => m.classList.add('hidden'));
-                    });
-                });
-                // Mobile Menu
-                elements.menuToggle.addEventListener('click', () => toggleSidebar(true));
-                elements.overlay.addEventListener('click', () => toggleSidebar(false));
-                // Textarea Auto-Resize
-                elements.input.addEventListener('input', function () {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                    if (this.value === '') this.style.height = 'auto';
-                });
-                // File Upload Listener
-                elements.fileUpload.addEventListener('change', handleFileUpload);
-            }
-            // Malware Lab & Sandbox tugmasi — alohida sahifa ochish
-            const malwareLabBtn = document.getElementById('malware-lab-btn');
-            if (malwareLabBtn) {
-                malwareLabBtn.addEventListener('click', () => {
-                    // Yangi sahifa ochish (o‘sha oynada)
-                    window.location.href = 'malware-lab.html';
-
-                    // Yoki yangi tabda ochishni xohlasangiz:
-                    // window.open('malware-lab.html', '_blank');
-
-                    // Mobil uchun sidebar avtomatik yopilsin
-                    if (window.innerWidth < 640) {
-                        toggleSidebar(false);
-                    }
-                });
-            }
-            // --- FILE UPLOAD & ANALYSIS ---
-            async function handleFileUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                showScanningLine(true);
-                addMessage('user', `Fayl yuklandi: ${file.name}. Chuqur tahlil boshlandi...`);
-
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const base64Data = e.target.result.split(',')[1];
-                    const mimeType = file.type;
-
-                    try {
-                        // Endi so'rovni o'zimizning Python serverimizga yuboramiz
-                        const response = await fetch(`${SERVER_URL}/api/analyze-file`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                fileName: file.name,
-                                mimeType: mimeType,
-                                fileData: base64Data
-                            })
-                        });
-
-                        const data = await response.json();
-                        if (data.error) throw new Error(data.error);
-
-                        showScanningLine(false);
-                        addMessage('model', data.analysis);
-                    } catch (error) {
-                        showScanningLine(false);
-                        addMessage('model', `**ANALYTICS ERROR:** ${error.message}`);
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-            // --- API & CHAT LOGIC ---
-            async function handleSend() {
-                const text = elements.input.value.trim();
-                if (!text) return;
-                // UI Updates
-                elements.input.value = '';
-                elements.input.style.height = 'auto';
-                if (elements.welcomeScreen) elements.welcomeScreen.remove();
-                addMessage('user', text);
-                showTyping();
-                try {
-                    // Prepare context for Gemini
-                    // Convert history format to Gemini format
-                    const historyForApi = state.history.map(msg => ({
-                        role: msg.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: msg.parts[0].text }]
-                    }));
-                    // Construct Payload
-                    const payload = {
-                        contents: [
-                            { role: "user", parts: [{ text: SYSTEM_PROMPT }] }, // System instruction as first user msg trick
-                            ...historyForApi // Append current history
-                        ],
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 8192, // Yangilangan: Ko'proq chiqish uchun oshirildi
-                        }
-                    };
-                    // Fetch
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error?.message || 'API Connection Error');
-                    }
-                    const botText = data.candidates[0].content.parts[0].text;
-                    removeTyping();
-                    addMessage('model', botText);
-                } catch (error) {
-                    removeTyping();
-                    console.error(error);
-                    document.getElementById('error-message').textContent = "Xatolik: " + error.message;
-                    toggleModal('error', true);
-                    // Optionally add error message to chat
-                    addMessage('model', `**SYSTEM ERROR:** ${error.message}. Iltimos qayta urinib ko'ring.`);
-                }
-            }
-            function addMessage(role, text) {
-                // Add to State
-                // Note: We don't push the system error message to history to avoid confusing the AI later
-                if (!text.startsWith('**SYSTEM ERROR:**')) {
-                    state.history.push({ role, parts: [{ text }] });
-                    saveConversation();
-                }
-                // Render HTML
-                const div = document.createElement('div');
-                div.className = `flex gap-4 max-w-4xl w-full animate-slide-in ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
-                const content = marked.parse(text);
-                div.innerHTML = `
-${role === 'model' ? `<div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
-            <div class="${role === 'user' ? 'msg-user text-right' : 'msg-model text-left'} p-4 max-w-[85%] prose prose-invert prose-p:leading-relaxed prose-pre:p-0 prose-pre:bg-transparent">
-${content}
-            </div>
-${role === 'user' ? `<div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
-        `;
-                elements.chatContainer.appendChild(div);
-                // Syntax Highlight
-                div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-                // Copy Buttons for Code
-                div.querySelectorAll('pre').forEach(pre => {
-                    const btn = document.createElement('div');
-                    btn.className = 'copy-btn';
-                    btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
-                    btn.onclick = () => {
-                        navigator.clipboard.writeText(pre.innerText);
-                        btn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Copied';
-                        lucide.createIcons();
-                        setTimeout(() => {
-                            btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
-                            lucide.createIcons();
-                        }, 2000);
-                    };
-                    pre.appendChild(btn);
-                });
-                lucide.createIcons();
-                scrollToBottom();
-            }
-            function showTyping() {
-                const div = document.createElement('div');
-                div.id = 'typing-indicator';
-                div.className = 'flex gap-4 max-w-4xl w-full justify-start mr-auto animate-slide-in';
-                div.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0"><i data-lucide="loader-2" class="w-4 h-4 text-[#00ff41] animate-spin"></i></div>
-            <div class="msg-model p-4 flex items-center gap-1">
-                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-            </div>
-        `;
-                elements.chatContainer.appendChild(div);
-                scrollToBottom();
-                lucide.createIcons();
-            }
-            function removeTyping() {
-                const el = document.getElementById('typing-indicator');
-                if (el) el.remove();
-            }
-            // --- UX HELPERS ---
-            function startNewChat() {
-                state.currentId = Date.now().toString();
-                state.history = [];
-                // Reset UI
-                elements.chatContainer.innerHTML = '';
-                elements.chatContainer.appendChild(elements.welcomeScreen || createWelcomeScreen());
-                if (window.innerWidth < 640) toggleSidebar(false);
-                renderHistory();
-                lucide.createIcons();
-            }
-            // Create Welcome Screen function in case it was removed from DOM
-            function createWelcomeScreen() {
-                const div = document.createElement('div');
-                div.id = 'welcome-screen';
-                div.className = 'flex flex-col items-center justify-center h-full text-center animate-slide-in';
-                div.innerHTML = `
-            <div class="w-24 h-24 rounded-full border border-[#00ff41]/50 flex items-center justify-center mb-6 bg-[#00ff41]/5 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
-                <i data-lucide="lock-keyhole" class="w-10 h-10 text-[#00ff41]"></i>
-            </div>
-            <h2 class="text-3xl font-bold mb-3 text-white">DEFCON <span class="text-[#00ff41]">INTELLIGENCE</span></h2>
-            <p class="text-gray-400 max-w-md text-sm mb-8">Axloqiy Kiberxavfsizlik va Penetratsion Testlash bo'yicha cheklovsiz AI tizimi.</p>
-        `;
-                return div;
-            }
-            function saveConversation() {
-                if (state.history.length > 0) {
-                    state.conversations[state.currentId] = state.history;
-                    localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
-                    renderHistory();
-                }
-            }
-            function renderHistory() {
-                elements.history.innerHTML = '';
-                const ids = Object.keys(state.conversations).reverse(); // Newest first
-                if (ids.length === 0) {
-                    elements.history.innerHTML = '<p class="text-gray-600 text-[10px] text-center mt-4">Tarix bo\'sh</p>';
-                    return;
-                }
-                ids.forEach(id => {
-                    const msgs = state.conversations[id];
-                    if (!msgs || !msgs.length) return;
-                    const firstMsg = msgs[0].parts[0].text;
-                    const title = firstMsg.length > 25 ? firstMsg.substring(0, 25) + '...' : firstMsg;
-                    const btn = document.createElement('button');
-                    const isActive = id === state.currentId;
-                    btn.className = `sidebar-link w-full text-left p-3 rounded flex items-center gap-3 text-xs truncate mb-1 ${isActive ? 'active' : 'text-gray-400'}`;
-                    btn.innerHTML = `<i data-lucide="terminal-square" class="w-3 h-3 flex-shrink-0"></i> <span class="truncate">${title}</span>`;
-                    btn.onclick = () => loadConversation(id);
-                    elements.history.appendChild(btn);
-                });
-                lucide.createIcons();
-            }
-            function loadConversation(id) {
-                state.currentId = id;
-                state.history = state.conversations[id] || [];
-                elements.chatContainer.innerHTML = '';
-                if (elements.welcomeScreen) elements.welcomeScreen.remove();
-                state.history.forEach(msg => {
-                    // Manually add HTML without pushing to history array again
-                    const role = msg.role;
-                    const text = msg.parts[0].text;
-                    const div = document.createElement('div');
-                    div.className = `flex gap-4 max-w-4xl w-full ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
-                    const content = marked.parse(text);
-                    div.innerHTML = `
-${role === 'model' ? `<div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
-                <div class="${role === 'user' ? 'msg-user text-right' : 'msg-model text-left'} p-4 max-w-[85%] prose prose-invert prose-p:leading-relaxed prose-pre:p-0">${content}</div>
-${role === 'user' ? `<div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
+        function addMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `flex gap-4 max-w-4xl w-full animate-slide-in ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
+            
+            const htmlContent = marked.parse(text);
+            div.innerHTML = `
+                ${role === 'model' ? `<div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
+                <div class="${role === 'user' ? 'msg-user text-right' : 'msg-model text-left'} p-4 max-w-[85%] prose prose-invert prose-p:leading-relaxed">
+                    ${role === 'model' ? '<p class="text-[10px] text-[#00ff41] font-bold mb-2 tracking-tighter uppercase">Cyber Intelligence Unit — DEFCON AI</p>' : ''}
+                    ${htmlContent}
+                </div>
+                ${role === 'user' ? `<div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1"><i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i></div>` : ''}
             `;
-                    elements.chatContainer.appendChild(div);
-                    // Highlight code
-                    div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-                    // Add copy buttons
-                    div.querySelectorAll('pre').forEach(pre => {
-                        const btn = document.createElement('div');
-                        btn.className = 'copy-btn';
-                        btn.textContent = 'Copy';
-                        btn.onclick = () => {
-                            navigator.clipboard.writeText(pre.innerText);
-                            btn.textContent = 'Copied';
-                            setTimeout(() => btn.textContent = 'Copy', 2000);
-                        };
-                        pre.appendChild(btn);
-                    });
-                });
-                if (window.innerWidth < 640) toggleSidebar(false);
-                lucide.createIcons();
-                scrollToBottom();
-                renderHistory(); // To update active state
+
+            elements.chatContainer.appendChild(div);
+            div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+            
+            // Code copy logic
+            div.querySelectorAll('pre').forEach(pre => {
+                const btn = document.createElement('button');
+                btn.className = 'copy-btn';
+                btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
+                btn.onclick = () => {
+                    navigator.clipboard.writeText(pre.innerText.replace('Copy', ''));
+                    btn.innerHTML = 'Copied!';
+                    setTimeout(() => { btn.innerHTML = 'Copy'; lucide.createIcons(); }, 2000);
+                };
+                pre.appendChild(btn);
+            });
+
+            lucide.createIcons();
+            scrollToBottom();
+        }
+
+        function showTyping() {
+            const div = document.createElement('div');
+            div.id = 'typing-indicator';
+            div.className = 'flex gap-4 max-w-4xl w-full justify-start mr-auto animate-slide-in';
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0"><i data-lucide="loader-2" class="w-4 h-4 text-[#00ff41] animate-spin"></i></div>
+                <div class="msg-model p-4 flex items-center gap-1">
+                    <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                </div>
+            `;
+            elements.chatContainer.appendChild(div);
+            scrollToBottom();
+            lucide.createIcons();
+        }
+
+        function removeTyping() {
+            const el = document.getElementById('typing-indicator');
+            if (el) el.remove();
+        }
+
+        function scrollToBottom() {
+            elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+        }
+
+        function showScanningLine(show) {
+            elements.scanningLine.style.display = show ? 'block' : 'none';
+        }
+
+        // 🟢 6. SIDEBAR & HISTORY LOGIC
+
+        function saveConversation() {
+            if (state.history.length > 0) {
+                state.conversations[state.currentId] = state.history;
+                localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
+                renderHistory();
             }
-            function clearAllData() {
-                if (confirm("DIQQAT: Barcha chat tarixi o'chiriladi. Davom etasizmi?")) {
-                    localStorage.removeItem('defcon_conversations');
-                    state.conversations = {};
-                    startNewChat();
-                }
+        }
+
+        function renderHistory() {
+            elements.history.innerHTML = '';
+            const ids = Object.keys(state.conversations).reverse();
+            if (ids.length === 0) {
+                elements.history.innerHTML = '<p class="text-gray-600 text-[10px] text-center mt-4 uppercase">No logs found</p>';
+                return;
             }
-            function toggleSidebar(show) {
-                if (show) {
-                    elements.sidebar.classList.remove('-translate-x-full');
-                    elements.overlay.classList.remove('hidden');
-                    setTimeout(() => elements.overlay.classList.remove('opacity-0'), 10);
-                } else {
-                    elements.sidebar.classList.add('-translate-x-full');
-                    elements.overlay.classList.add('opacity-0');
-                    setTimeout(() => elements.overlay.classList.add('hidden'), 300);
-                }
+            ids.forEach(id => {
+                const chat = state.conversations[id];
+                const firstMsg = chat[0]?.parts[0]?.text || "New Session";
+                const title = firstMsg.length > 20 ? firstMsg.substring(0, 20) + '...' : firstMsg;
+                
+                const btn = document.createElement('button');
+                btn.className = `sidebar-link w-full text-left p-3 rounded flex items-center gap-3 text-xs truncate mb-1 ${id === state.currentId ? 'active' : 'text-gray-400'}`;
+                btn.innerHTML = `<i data-lucide="terminal-square" class="w-3 h-3"></i> <span>${title}</span>`;
+                btn.onclick = () => loadConversation(id);
+                elements.history.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function loadConversation(id) {
+            state.currentId = id;
+            state.history = state.conversations[id] || [];
+            elements.chatContainer.innerHTML = '';
+            state.history.forEach(msg => addMessage(msg.role, msg.parts[0].text));
+            if (window.innerWidth < 640) toggleSidebar(false);
+        }
+
+        function startNewChat() {
+            state.currentId = Date.now().toString();
+            state.history = [];
+            elements.chatContainer.innerHTML = '';
+            elements.chatContainer.appendChild(createWelcomeScreen());
+            if (window.innerWidth < 640) toggleSidebar(false);
+            renderHistory();
+        }
+
+        function createWelcomeScreen() {
+            const div = document.createElement('div');
+            div.id = 'welcome-screen';
+            div.className = 'flex flex-col items-center justify-center h-full text-center animate-slide-in';
+            div.innerHTML = `
+                <div class="w-24 h-24 rounded-full border border-[#00ff41]/50 flex items-center justify-center mb-6 bg-[#00ff41]/5">
+                    <i data-lucide="lock-keyhole" class="w-10 h-10 text-[#00ff41]"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-3 text-white">DEFCON <span class="text-[#00ff41]">INTELLIGENCE</span></h2>
+                <p class="text-gray-400 max-w-md text-sm">Secure Terminal Activated. Ready for commands.</p>
+            `;
+            lucide.createIcons();
+            return div;
+        }
+
+        function toggleSidebar(show) {
+            if (show) {
+                elements.sidebar.classList.remove('-translate-x-full');
+                elements.overlay.classList.remove('hidden');
+            } else {
+                elements.sidebar.classList.add('-translate-x-full');
+                elements.overlay.classList.add('hidden');
             }
-            function toggleModal(name, show) {
-                const modal = elements.modals[name];
-                if (show) modal.classList.remove('hidden');
-                else modal.classList.add('hidden');
+        }
+
+        // 🟢 7. EVENT LISTENERS
+
+        elements.sendBtn.onclick = handleSend;
+        elements.input.onkeydown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
             }
-            function scrollToBottom() {
-                elements.chatContainer.scrollTop = elements.chatContainer.scrollHeight;
+        };
+
+        elements.newChatBtn.onclick = startNewChat;
+        elements.fileUpload.onchange = handleFileUpload;
+        elements.menuToggle.onclick = () => toggleSidebar(true);
+        elements.overlay.onclick = () => toggleSidebar(false);
+        
+        elements.buttons.settings.onclick = () => elements.modals.settings.classList.remove('hidden');
+        elements.buttons.about.onclick = () => elements.modals.about.classList.remove('hidden');
+        elements.buttons.sponsors.onclick = () => elements.modals.sponsors.classList.remove('hidden');
+        elements.buttons.clear.onclick = () => {
+            if(confirm("DIQQAT: Barcha chat tarixi o'chiriladi. Davom etasizmi?")) {
+                localStorage.removeItem('defcon_conversations');
+                state.conversations = {};
+                startNewChat();
             }
+        };
+
+        if (elements.buttons.malwareLab) {
+            elements.buttons.malwareLab.onclick = () => window.location.href = 'malware-lab.html';
+        }
+
+        elements.buttons.closeModal.forEach(btn => {
+            btn.onclick = () => Object.values(elements.modals).forEach(m => m.classList.add('hidden'));
         });
-    </script>
+
+        // Initialize Icons & History
+        lucide.createIcons();
+        renderHistory();
+    });
+</script>
 </body>
 
 </html>
