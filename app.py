@@ -34,7 +34,7 @@ JAVOB USLUBI:
 
 # Model tanlash (Gemini-1.5-flash bepul limitlar uchun eng barqarori)
 # Eslatma: gemini-2.0-flash-exp hozirda mavjud, lekin gemini-1.5-flash stabilroq.
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.0-flash" 
 
 model = genai.GenerativeModel(
     model_name=MODEL_NAME,
@@ -42,7 +42,7 @@ model = genai.GenerativeModel(
     generation_config={
         "temperature": 0.1, # Yanada aniqroq va mantiqiy javoblar uchun
         "top_p": 0.95,
-        "max_output_tokens": 8192,
+        "max_output_tokens": 4096,
     },
     safety_settings=[
         {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
