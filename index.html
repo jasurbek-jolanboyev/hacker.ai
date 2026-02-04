@@ -313,47 +313,34 @@
                     </div>
                 </div>
             </div>
-            <div class="p-4 md:p-6 z-20">
-                <div
-                    class="glass-panel rounded-2xl p-2 flex flex-col neon-border-focus transition-all duration-300 relative bg-black/60 shadow-2xl">
+<div class="p-4 md:p-6 z-20">
+    <div class="glass-panel rounded-2xl p-2 flex flex-col neon-border-focus transition-all duration-300 relative bg-black/60 shadow-2xl">
+        
+        <div id="file-preview-container" class="flex flex-wrap gap-2 px-3 py-2 hidden border-b border-gray-800 mb-1"></div>
 
-                    <div id="file-preview-container"
-                        class="flex flex-wrap gap-2 px-3 py-2 hidden border-b border-gray-800 mb-1"></div>
+        <div class="flex items-end gap-2">
+            <label for="file-upload" class="p-3 text-[#00ff41] cursor-pointer flex-shrink-0 mb-[1px] hover:text-white transition-colors">
+                <i data-lucide="paperclip" class="w-5 h-5"></i>
+            </label>
+            <input id="file-upload" type="file" class="hidden" accept="*/*" multiple>
 
-                    <div class="flex items-end gap-2">
-                        <label for="file-upload" class="p-3 text-[#00ff41] cursor-pointer flex-shrink-0 mb-[1px]">
-                            <i data-lucide="paperclip" class="w-5 h-5"></i>
-                        </label>
-                        <input id="file-upload" type="file" class="hidden" accept="*/*" multiple> <textarea
-                            id="message-input" rows="1"
-                            class="w-full bg-transparent text-gray-200 p-3 max-h-40 focus:outline-none resize-none placeholder-gray-600 text-sm font-mono"
-                            placeholder="Buyruq yoki so'rov kiriting..."></textarea>
-                        <button id="send-button"
-                            class="p-3 bg-[#00ff41] text-black rounded-xl hover:bg-[#00cc33] transition-colors font-bold flex-shrink-0 mb-[1px]">
-                            <i data-lucide="send" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="p-4 md:p-6 z-20">
-                    <div
-                        class="glass-panel rounded-2xl p-2 flex items-end gap-2 neon-border-focus transition-all duration-300 relative bg-black/60 shadow-2xl">
-                        <label for="file-upload" class="p-3 text-[#00ff41] cursor-pointer flex-shrink-0 mb-[1px]">
-                            <i data-lucide="paperclip" class="w-5 h-5"></i>
-                        </label>
-                        <input id="file-upload" type="file" class="hidden" accept="*/*">
-                        <textarea id="message-input" rows="1"
-                            class="w-full bg-transparent text-gray-200 p-3 max-h-40 focus:outline-none resize-none placeholder-gray-600 text-sm font-mono"
-                            placeholder="Buyruq yoki so'rov kiriting..."></textarea>
-                        <button id="send-button"
-                            class="p-3 bg-[#00ff41] text-black rounded-xl hover:bg-[#00cc33] transition-colors font-bold flex-shrink-0 mb-[1px]">
-                            <i data-lucide="send" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                    <p class="text-center text-[10px] text-gray-600 mt-2 uppercase tracking-widest">
-                        Secure Connection • Jasurbek Jolanboyev • © 2025 DEFCON AI
-                    </p>
-                </div>
-                <div id="scanning-line"></div>
+            <textarea id="message-input" rows="1"
+                class="w-full bg-transparent text-gray-200 p-3 max-h-40 focus:outline-none resize-none placeholder-gray-600 text-sm font-mono"
+                placeholder="Buyruq yoki so'rov kiriting..."></textarea>
+
+            <button id="send-button"
+                class="p-3 bg-[#00ff41] text-black rounded-xl hover:bg-[#00cc33] transition-colors font-bold flex-shrink-0 mb-[1px]">
+                <i data-lucide="send" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <p class="text-center text-[10px] text-gray-600 mt-2 uppercase tracking-widest">
+        Secure Connection • Jasurbek Jolanboyev • © 2026 DEFCON AI
+    </p>
+</div>
+
+<div id="scanning-line"></div>
         </main>
     </div>
     <div id="settings-modal"
@@ -501,7 +488,7 @@
             // 🟢 1. CONFIGURATION
             const SERVER_URL = "https://deaf-2k3f.onrender.com";
 
-            // 🟢 2. DOM ELEMENTS (Bunga filePreview qo'shildi)
+            // 🟢 2. DOM ELEMENTS (To'g'rilangan va tartiblangan)
             const elements = {
                 input: document.getElementById('message-input'),
                 sendBtn: document.getElementById('send-button'),
@@ -514,14 +501,7 @@
                 overlay: document.getElementById('overlay'),
                 scanningLine: document.getElementById('scanning-line'),
                 fileUpload: document.getElementById('file-upload'),
-                // Yangi element: input tepasidagi konteyner
-                filePreview: document.getElementById('file-preview-container') || (() => {
-                    const div = document.createElement('div');
-                    div.id = 'file-preview-container';
-                    div.className = 'flex flex-wrap gap-2 px-3 py-2 hidden border-b border-gray-800 mb-1';
-                    document.getElementById('message-input').parentElement.prepend(div);
-                    return div;
-                })(),
+                filePreview: document.getElementById('file-preview-container'),
                 modals: {
                     settings: document.getElementById('settings-modal'),
                     about: document.getElementById('about-modal'),
@@ -546,78 +526,96 @@
                 selectedFiles: []
             };
 
-            // 🟢 4. CORE FUNCTIONS
+            // 🟢 4. UI FUNCTIONS (Xabarlarni chiqarish)
+            function addMessage(role, text) {
+                if (elements.welcomeScreen) elements.welcomeScreen.remove();
 
-            // Fayllarni tanlash va UI-da ko'rsatish
-            async function handleFileUpload(event) {
-                const files = Array.from(event.target.files);
-                if (files.length === 0) return;
+                const div = document.createElement('div');
+                div.className = `flex gap-4 max-w-4xl w-full animate-slide-in ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
 
-                elements.filePreview.classList.remove('hidden');
+                // Markdown tahrirlash (Safe render)
+                const htmlContent = marked.parse(text);
 
-                for (const file of files) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const fileObj = {
-                            id: Date.now() + Math.random(),
-                            fileName: file.name,
-                            mimeType: file.type,
-                            fileData: e.target.result.split(',')[1]
+                div.innerHTML = `
+            ${role === 'model' ? `
+                <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1">
+                    <i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i>
+                </div>` : ''}
+            <div class="${role === 'user' ? 'msg-user' : 'msg-model'} p-4 shadow-lg overflow-x-auto text-sm">
+                ${htmlContent}
+            </div>
+            ${role === 'user' ? `
+                <div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1">
+                    <i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i>
+                </div>` : ''}
+        `;
+
+                elements.chatContainer.appendChild(div);
+
+                // Code highlighting va Copy tugmasi
+                div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+                div.querySelectorAll('pre').forEach(pre => {
+                    if (!pre.querySelector('.copy-btn')) {
+                        const btn = document.createElement('button');
+                        btn.className = 'copy-btn';
+                        btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
+                        btn.onclick = () => {
+                            const code = pre.querySelector('code').innerText;
+                            navigator.clipboard.writeText(code);
+                            btn.innerHTML = 'Copied!';
+                            setTimeout(() => { btn.innerHTML = 'Copy'; }, 2000);
                         };
-                        state.selectedFiles.push(fileObj);
-                        renderFilePreviews();
-                    };
-                    reader.readAsDataURL(file);
-                }
-                event.target.value = '';
+                        pre.appendChild(btn);
+                    }
+                });
+
+                lucide.createIcons();
+                scrollToBottom();
             }
 
-            // Fayl nishonchalarini chizish
-            function renderFilePreviews() {
-                elements.filePreview.innerHTML = '';
-                if (state.selectedFiles.length === 0) {
-                    elements.filePreview.classList.add('hidden');
-                    return;
-                }
-
-                state.selectedFiles.forEach(file => {
-                    const badge = document.createElement('div');
-                    badge.className = "flex items-center gap-2 bg-[#00ff41]/10 border border-[#00ff41]/30 text-[#00ff41] text-[10px] px-2 py-1 rounded-md animate-slide-in";
-                    badge.innerHTML = `
-                        <i data-lucide="file-text" class="w-3 h-3"></i>
-                        <span class="max-w-[100px] truncate">${file.fileName}</span>
-                        <button onclick="removeSelectedFile(${file.id})" class="hover:text-white ml-1">
-                            <i data-lucide="x" class="w-3 h-3"></i>
-                        </button>
-                    `;
-                    elements.filePreview.appendChild(badge);
-                });
+            function showTyping() {
+                if (document.getElementById('typing-indicator')) return;
+                const div = document.createElement('div');
+                div.id = 'typing-indicator';
+                div.className = 'flex gap-4 max-w-4xl w-full justify-start mr-auto animate-slide-in';
+                div.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="loader-2" class="w-4 h-4 text-[#00ff41] animate-spin"></i>
+            </div>
+            <div class="msg-model p-4 flex items-center gap-1">
+                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+            </div>
+        `;
+                elements.chatContainer.appendChild(div);
+                scrollToBottom();
                 lucide.createIcons();
             }
 
-            // Faylni ro'yxatdan olib tashlash
-            window.removeSelectedFile = function (id) {
-                state.selectedFiles = state.selectedFiles.filter(f => f.id !== id);
-                renderFilePreviews();
-            };
+            function removeTyping() {
+                const el = document.getElementById('typing-indicator');
+                if (el) el.remove();
+            }
 
+            function scrollToBottom() {
+                elements.chatContainer.scrollTo({ top: elements.chatContainer.scrollHeight, behavior: 'smooth' });
+            }
+
+            // 🟢 5. CORE LOGIC (Send & Files)
             async function handleSend() {
                 const text = elements.input.value.trim();
                 if (!text && state.selectedFiles.length === 0) return;
 
-                // UI-ni darhol tozalash
+                // UI-ni tozalash
                 elements.input.value = '';
                 elements.input.style.height = 'auto';
-                elements.filePreview.classList.add('hidden');
+                const currentFiles = [...state.selectedFiles];
+                state.selectedFiles = [];
                 elements.filePreview.innerHTML = '';
+                elements.filePreview.classList.add('hidden');
 
-                if (elements.welcomeScreen) elements.welcomeScreen.remove();
-
-                // Chat oynasida ko'rsatiladigan xabar
                 let displayMsg = text;
-                if (state.selectedFiles.length > 0) {
-                    const names = state.selectedFiles.map(f => f.fileName).join(', ');
-                    displayMsg += `\n\n<div class="text-[10px] text-[#00ff41] opacity-70">📎 Biriktirilgan: ${names}</div>`;
+                if (currentFiles.length > 0) {
+                    displayMsg += `\n\n<div class="text-[10px] text-[#00ff41] opacity-70">📎 Files: ${currentFiles.map(f => f.fileName).join(', ')}</div>`;
                 }
 
                 addMessage('user', displayMsg);
@@ -630,7 +628,7 @@
                         body: JSON.stringify({
                             message: text,
                             history: state.history,
-                            files: state.selectedFiles.map(f => ({
+                            files: currentFiles.map(f => ({
                                 fileName: f.fileName,
                                 mimeType: f.mimeType,
                                 fileData: f.fileData
@@ -639,142 +637,76 @@
                     });
 
                     const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || "Server xatosi");
-
                     removeTyping();
-                    addMessage('model', data.reply);
 
+                    if (!response.ok) throw new Error(data.error || "Server Error");
+
+                    addMessage('model', data.reply);
                     state.history.push({ role: "user", parts: [{ text: text }] });
                     state.history.push({ role: "model", parts: [{ text: data.reply }] });
-
-                    // MUHIM: Fayllarni yuborilgandan keyin tozalash
-                    state.selectedFiles = [];
                     saveConversation();
 
                 } catch (error) {
                     removeTyping();
-                    console.error("Xatolik:", error);
                     addMessage('model', `**SYSTEM ERROR:** ${error.message}`);
-                    state.selectedFiles = []; // Xato bo'lsa ham navbatni bo'shatish
                 }
             }
-            // 🟢 5. UI HELPERS
 
-            function addMessage(role, text) {
-                const div = document.createElement('div');
-                // Foydalanuvchi va AI xabarlarini o'ng/chapga tekislash
-                div.className = `flex gap-4 max-w-4xl w-full animate-slide-in ${role === 'user' ? 'justify-end ml-auto' : 'justify-start mr-auto'}`;
+            async function handleFileUpload(event) {
+                const files = Array.from(event.target.files);
+                if (files.length === 0) return;
 
-                const htmlContent = marked.parse(text);
+                elements.filePreview.classList.remove('hidden');
 
-                // DIQQAT: Sarlavha (Cyber Intelligence...) bu yerdan olib tashlandi
-                div.innerHTML = `
-                    ${role === 'model' ? `
-                        <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0 mt-1">
-                            <i data-lucide="bot" class="w-4 h-4 text-[#00ff41]"></i>
-                        </div>` : ''}
-                    
-                    <div class="${role === 'user' ? 'msg-user text-right' : 'msg-model text-left'} p-4 max-w-[85%] prose prose-invert prose-p:leading-relaxed">
-                        ${htmlContent}
-                    </div>
-
-                    ${role === 'user' ? `
-                        <div class="w-8 h-8 rounded-full bg-[#00ff41]/20 border border-[#00ff41] flex items-center justify-center flex-shrink-0 mt-1">
-                            <i data-lucide="user" class="w-4 h-4 text-[#00ff41]"></i>
-                        </div>` : ''}
-                `;
-
-                elements.chatContainer.appendChild(div);
-
-                // Kodlarni rangli qilish (Syntax Highlighting)
-                div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
-
-                // Kod bloklari uchun nusxalash (Copy) tugmasi
-                div.querySelectorAll('pre').forEach(pre => {
-                    const btn = document.createElement('button');
-                    btn.className = 'copy-btn';
-                    btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
-                    btn.onclick = () => {
-                        // "Copy" so'zi matnga qo'shilib ketmasligi uchun tozalash
-                        const codeToCopy = pre.querySelector('code').innerText;
-                        navigator.clipboard.writeText(codeToCopy);
-                        btn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i> Copied!';
-                        setTimeout(() => {
-                            btn.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> Copy';
-                            lucide.createIcons();
-                        }, 2000);
+                for (const file of files) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        state.selectedFiles.push({
+                            id: Date.now() + Math.random(),
+                            fileName: file.name,
+                            mimeType: file.type,
+                            fileData: e.target.result.split(',')[1]
+                        });
+                        renderFilePreviews();
                     };
-                    pre.appendChild(btn);
-                });
-
-                lucide.createIcons();
-                scrollToBottom();
-            }
-
-            function showTyping() {
-                const div = document.createElement('div');
-                div.id = 'typing-indicator';
-                div.className = 'flex gap-4 max-w-4xl w-full justify-start mr-auto animate-slide-in';
-                div.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="loader-2" class="w-4 h-4 text-[#00ff41] animate-spin"></i>
-                    </div>
-                    <div class="msg-model p-4 flex items-center gap-1">
-                        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-                    </div>
-                `;
-                elements.chatContainer.appendChild(div);
-                scrollToBottom();
-                lucide.createIcons();
-            }
-
-            function removeTyping() {
-                const el = document.getElementById('typing-indicator');
-                if (el) el.remove();
-            }
-
-            function scrollToBottom() {
-                // Silliq siljish effekti bilan pastga tushish
-                elements.chatContainer.scrollTo({
-                    top: elements.chatContainer.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }
-
-            function showScanningLine(show) {
-                if (elements.scanningLine) {
-                    elements.scanningLine.style.display = show ? 'block' : 'none';
+                    reader.readAsDataURL(file);
                 }
+                event.target.value = '';
             }
-            // 🟢 6. SIDEBAR & HISTORY LOGIC
 
+            function renderFilePreviews() {
+                elements.filePreview.innerHTML = '';
+                state.selectedFiles.forEach(file => {
+                    const badge = document.createElement('div');
+                    badge.className = "flex items-center gap-2 bg-[#00ff41]/10 border border-[#00ff41]/30 text-[#00ff41] text-[10px] px-2 py-1 rounded-md";
+                    badge.innerHTML = `<span>${file.fileName}</span><button onclick="removeFile(${file.id})">×</button>`;
+                    elements.filePreview.appendChild(badge);
+                });
+                if (state.selectedFiles.length === 0) elements.filePreview.classList.add('hidden');
+            }
+
+            window.removeFile = (id) => {
+                state.selectedFiles = state.selectedFiles.filter(f => f.id !== id);
+                renderFilePreviews();
+            };
+
+            // 🟢 6. CONVERSATION MANAGEMENT
             function saveConversation() {
-                if (state.history.length > 0) {
-                    state.conversations[state.currentId] = state.history;
-                    localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
-                    renderHistory();
-                }
+                state.conversations[state.currentId] = state.history;
+                localStorage.setItem('defcon_conversations', JSON.stringify(state.conversations));
+                renderHistory();
             }
 
             function renderHistory() {
                 elements.history.innerHTML = '';
                 const ids = Object.keys(state.conversations).reverse();
-                if (ids.length === 0) {
-                    elements.history.innerHTML = '<p class="text-gray-600 text-[10px] text-center mt-4 uppercase">No logs found</p>';
-                    return;
-                }
                 ids.forEach(id => {
-                    const chat = state.conversations[id];
-                    const firstMsg = chat[0]?.parts[0]?.text || "New Session";
-                    const title = firstMsg.length > 20 ? firstMsg.substring(0, 20) + '...' : firstMsg;
-
                     const btn = document.createElement('button');
-                    btn.className = `sidebar-link w-full text-left p-3 rounded flex items-center gap-3 text-xs truncate mb-1 ${id === state.currentId ? 'active' : 'text-gray-400'}`;
-                    btn.innerHTML = `<i data-lucide="terminal-square" class="w-3 h-3"></i> <span>${title}</span>`;
+                    btn.className = `sidebar-link w-full text-left p-2 rounded text-xs mb-1 ${id === state.currentId ? 'active' : ''}`;
+                    btn.innerHTML = `Session: ${id.slice(-5)}`;
                     btn.onclick = () => loadConversation(id);
                     elements.history.appendChild(btn);
                 });
-                lucide.createIcons();
             }
 
             function loadConversation(id) {
@@ -782,80 +714,37 @@
                 state.history = state.conversations[id] || [];
                 elements.chatContainer.innerHTML = '';
                 state.history.forEach(msg => addMessage(msg.role, msg.parts[0].text));
-                if (window.innerWidth < 640) toggleSidebar(false);
             }
 
             function startNewChat() {
                 state.currentId = Date.now().toString();
                 state.history = [];
                 elements.chatContainer.innerHTML = '';
-                elements.chatContainer.appendChild(createWelcomeScreen());
-                if (window.innerWidth < 640) toggleSidebar(false);
-                renderHistory();
+                // Welcome screen qayta yaratiladi
+                location.reload(); // Eng xavfsiz yangilash yo'li
             }
 
-            function createWelcomeScreen() {
-                const div = document.createElement('div');
-                div.id = 'welcome-screen';
-                div.className = 'flex flex-col items-center justify-center h-full text-center animate-slide-in';
-                div.innerHTML = `
-                <div class="w-24 h-24 rounded-full border border-[#00ff41]/50 flex items-center justify-center mb-6 bg-[#00ff41]/5">
-                    <i data-lucide="lock-keyhole" class="w-10 h-10 text-[#00ff41]"></i>
-                </div>
-                <h2 class="text-3xl font-bold mb-3 text-white">DEFCON <span class="text-[#00ff41]">INTELLIGENCE</span></h2>
-                <p class="text-gray-400 max-w-md text-sm">Secure Terminal Activated. Ready for commands.</p>
-            `;
-                lucide.createIcons();
-                return div;
-            }
-
-            function toggleSidebar(show) {
-                if (show) {
-                    elements.sidebar.classList.remove('-translate-x-full');
-                    elements.overlay.classList.remove('hidden');
-                } else {
-                    elements.sidebar.classList.add('-translate-x-full');
-                    elements.overlay.classList.add('hidden');
-                }
-            }
-
-            // 🟢 7. EVENT LISTENERS
-
-            elements.sendBtn.onclick = handleSend;
-            elements.input.onkeydown = (e) => {
+            // 🟢 7. EVENT LISTENERS (Yagona bog'lanish)
+            elements.sendBtn.addEventListener('click', handleSend);
+            elements.input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleSend();
                 }
-            };
-
+            });
+            elements.fileUpload.addEventListener('change', handleFileUpload);
             elements.newChatBtn.onclick = startNewChat;
-            elements.fileUpload.onchange = handleFileUpload;
-            elements.menuToggle.onclick = () => toggleSidebar(true);
-            elements.overlay.onclick = () => toggleSidebar(false);
 
+            // Modallarni ochish/yopish
             elements.buttons.settings.onclick = () => elements.modals.settings.classList.remove('hidden');
             elements.buttons.about.onclick = () => elements.modals.about.classList.remove('hidden');
             elements.buttons.sponsors.onclick = () => elements.modals.sponsors.classList.remove('hidden');
-            elements.buttons.clear.onclick = () => {
-                if (confirm("DIQQAT: Barcha chat tarixi o'chiriladi. Davom etasizmi?")) {
-                    localStorage.removeItem('defcon_conversations');
-                    state.conversations = {};
-                    startNewChat();
-                }
-            };
-
-            if (elements.buttons.malwareLab) {
-                elements.buttons.malwareLab.onclick = () => window.location.href = 'malware-lab.html';
-            }
-
             elements.buttons.closeModal.forEach(btn => {
                 btn.onclick = () => Object.values(elements.modals).forEach(m => m.classList.add('hidden'));
             });
 
-            // Initialize Icons & History
-            lucide.createIcons();
             renderHistory();
+            lucide.createIcons();
         });
     </script>
 </body>
