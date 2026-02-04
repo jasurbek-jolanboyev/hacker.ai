@@ -315,24 +315,45 @@
             </div>
             <div class="p-4 md:p-6 z-20">
                 <div
-                    class="glass-panel rounded-2xl p-2 flex items-end gap-2 neon-border-focus transition-all duration-300 relative bg-black/60 shadow-2xl">
-                    <label for="file-upload" class="p-3 text-[#00ff41] cursor-pointer flex-shrink-0 mb-[1px]">
-                        <i data-lucide="paperclip" class="w-5 h-5"></i>
-                    </label>
-                    <input id="file-upload" type="file" class="hidden" accept="*/*">
-                    <textarea id="message-input" rows="1"
-                        class="w-full bg-transparent text-gray-200 p-3 max-h-40 focus:outline-none resize-none placeholder-gray-600 text-sm font-mono"
-                        placeholder="Buyruq yoki so'rov kiriting..."></textarea>
-                    <button id="send-button"
-                        class="p-3 bg-[#00ff41] text-black rounded-xl hover:bg-[#00cc33] transition-colors font-bold flex-shrink-0 mb-[1px]">
-                        <i data-lucide="send" class="w-5 h-5"></i>
-                    </button>
+                    class="glass-panel rounded-2xl p-2 flex flex-col neon-border-focus transition-all duration-300 relative bg-black/60 shadow-2xl">
+
+                    <div id="file-preview-container"
+                        class="flex flex-wrap gap-2 px-3 py-2 hidden border-b border-gray-800 mb-1"></div>
+
+                    <div class="flex items-end gap-2">
+                        <label for="file-upload" class="p-3 text-[#00ff41] cursor-pointer flex-shrink-0 mb-[1px]">
+                            <i data-lucide="paperclip" class="w-5 h-5"></i>
+                        </label>
+                        <input id="file-upload" type="file" class="hidden" accept="*/*" multiple> <textarea
+                            id="message-input" rows="1"
+                            class="w-full bg-transparent text-gray-200 p-3 max-h-40 focus:outline-none resize-none placeholder-gray-600 text-sm font-mono"
+                            placeholder="Buyruq yoki so'rov kiriting..."></textarea>
+                        <button id="send-button"
+                            class="p-3 bg-[#00ff41] text-black rounded-xl hover:bg-[#00cc33] transition-colors font-bold flex-shrink-0 mb-[1px]">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                 </div>
-                <p class="text-center text-[10px] text-gray-600 mt-2 uppercase tracking-widest">
-                    Secure Connection • Jasurbek Jolanboyev • © 2025 DEFCON AI
-                </p>
-            </div>
-            <div id="scanning-line"></div>
+                <div class="p-4 md:p-6 z-20">
+                    <div
+                        class="glass-panel rounded-2xl p-2 flex items-end gap-2 neon-border-focus transition-all duration-300 relative bg-black/60 shadow-2xl">
+                        <label for="file-upload" class="p-3 text-[#00ff41] cursor-pointer flex-shrink-0 mb-[1px]">
+                            <i data-lucide="paperclip" class="w-5 h-5"></i>
+                        </label>
+                        <input id="file-upload" type="file" class="hidden" accept="*/*">
+                        <textarea id="message-input" rows="1"
+                            class="w-full bg-transparent text-gray-200 p-3 max-h-40 focus:outline-none resize-none placeholder-gray-600 text-sm font-mono"
+                            placeholder="Buyruq yoki so'rov kiriting..."></textarea>
+                        <button id="send-button"
+                            class="p-3 bg-[#00ff41] text-black rounded-xl hover:bg-[#00cc33] transition-colors font-bold flex-shrink-0 mb-[1px]">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <p class="text-center text-[10px] text-gray-600 mt-2 uppercase tracking-widest">
+                        Secure Connection • Jasurbek Jolanboyev • © 2025 DEFCON AI
+                    </p>
+                </div>
+                <div id="scanning-line"></div>
         </main>
     </div>
     <div id="settings-modal"
@@ -480,7 +501,7 @@
             // 🟢 1. CONFIGURATION
             const SERVER_URL = "https://deaf-2k3f.onrender.com";
 
-            // 🟢 2. DOM ELEMENTS
+            // 🟢 2. DOM ELEMENTS (Bunga filePreview qo'shildi)
             const elements = {
                 input: document.getElementById('message-input'),
                 sendBtn: document.getElementById('send-button'),
@@ -493,6 +514,14 @@
                 overlay: document.getElementById('overlay'),
                 scanningLine: document.getElementById('scanning-line'),
                 fileUpload: document.getElementById('file-upload'),
+                // Yangi element: input tepasidagi konteyner
+                filePreview: document.getElementById('file-preview-container') || (() => {
+                    const div = document.createElement('div');
+                    div.id = 'file-preview-container';
+                    div.className = 'flex flex-wrap gap-2 px-3 py-2 hidden border-b border-gray-800 mb-1';
+                    document.getElementById('message-input').parentElement.prepend(div);
+                    return div;
+                })(),
                 modals: {
                     settings: document.getElementById('settings-modal'),
                     about: document.getElementById('about-modal'),
@@ -514,61 +543,98 @@
                 history: [],
                 conversations: JSON.parse(localStorage.getItem('defcon_conversations') || '{}'),
                 currentId: Date.now().toString(),
-                selectedFiles: [] // Tanlangan fayllarni vaqtinchalik saqlash uchun
+                selectedFiles: []
             };
 
             // 🟢 4. CORE FUNCTIONS
 
-            // Fayllarni tanlaganda ularni navbatga qo'shish
+            // Fayllarni tanlash va UI-da ko'rsatish
             async function handleFileUpload(event) {
                 const files = Array.from(event.target.files);
                 if (files.length === 0) return;
 
+                elements.filePreview.classList.remove('hidden');
+
                 for (const file of files) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        state.selectedFiles.push({
+                        const fileObj = {
+                            id: Date.now() + Math.random(),
                             fileName: file.name,
                             mimeType: file.type,
                             fileData: e.target.result.split(',')[1]
-                        });
-                        // Foydalanuvchiga fayl yuklanganini bildirish
-                        addMessage('user', `📎 Fayl biriktirildi: ${file.name}`);
+                        };
+                        state.selectedFiles.push(fileObj);
+                        renderFilePreviews();
                     };
                     reader.readAsDataURL(file);
                 }
-                // Inputni tozalash (bir xil faylni qayta tanlay olish uchun)
                 event.target.value = '';
             }
 
+            // Fayl nishonchalarini chizish
+            function renderFilePreviews() {
+                elements.filePreview.innerHTML = '';
+                if (state.selectedFiles.length === 0) {
+                    elements.filePreview.classList.add('hidden');
+                    return;
+                }
+
+                state.selectedFiles.forEach(file => {
+                    const badge = document.createElement('div');
+                    badge.className = "flex items-center gap-2 bg-[#00ff41]/10 border border-[#00ff41]/30 text-[#00ff41] text-[10px] px-2 py-1 rounded-md animate-slide-in";
+                    badge.innerHTML = `
+                        <i data-lucide="file-text" class="w-3 h-3"></i>
+                        <span class="max-w-[100px] truncate">${file.fileName}</span>
+                        <button onclick="removeSelectedFile(${file.id})" class="hover:text-white ml-1">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    `;
+                    elements.filePreview.appendChild(badge);
+                });
+                lucide.createIcons();
+            }
+
+            // Faylni ro'yxatdan olib tashlash
+            window.removeSelectedFile = function (id) {
+                state.selectedFiles = state.selectedFiles.filter(f => f.id !== id);
+                renderFilePreviews();
+            };
+
             async function handleSend() {
                 const text = elements.input.value.trim();
-                // Agar na matn, na fayl bo'lsa - jo'natmaymiz
                 if (!text && state.selectedFiles.length === 0) return;
 
-                // UI-ni tayyorlash
+                // UI-ni darhol tozalash
                 elements.input.value = '';
                 elements.input.style.height = 'auto';
+                elements.filePreview.classList.add('hidden');
+                elements.filePreview.innerHTML = '';
+
                 if (elements.welcomeScreen) elements.welcomeScreen.remove();
 
-                // Agar fayllar bo'lsa, ularni matn bilan birga ko'rsatamiz
+                // Chat oynasida ko'rsatiladigan xabar
                 let displayMsg = text;
                 if (state.selectedFiles.length > 0) {
-                    displayMsg += `\n\n*(Tahlil uchun ${state.selectedFiles.length} ta fayl yuborildi)*`;
+                    const names = state.selectedFiles.map(f => f.fileName).join(', ');
+                    displayMsg += `\n\n<div class="text-[10px] text-[#00ff41] opacity-70">📎 Biriktirilgan: ${names}</div>`;
                 }
 
                 addMessage('user', displayMsg);
                 showTyping();
 
                 try {
-                    // Chat va Fayllarni bitta paketda yuborish
                     const response = await fetch(`${SERVER_URL}/api/chat`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
                             message: text,
                             history: state.history,
-                            files: state.selectedFiles // Fayllar massivi
+                            files: state.selectedFiles.map(f => ({
+                                fileName: f.fileName,
+                                mimeType: f.mimeType,
+                                fileData: f.fileData
+                            }))
                         })
                     });
 
@@ -578,11 +644,10 @@
                     removeTyping();
                     addMessage('model', data.reply);
 
-                    // Tarixni yangilash
                     state.history.push({ role: "user", parts: [{ text: text }] });
                     state.history.push({ role: "model", parts: [{ text: data.reply }] });
 
-                    // Yuborilgandan keyin fayllar navbatini tozalash
+                    // MUHIM: Fayllarni yuborilgandan keyin tozalash
                     state.selectedFiles = [];
                     saveConversation();
 
@@ -590,10 +655,9 @@
                     removeTyping();
                     console.error("Xatolik:", error);
                     addMessage('model', `**SYSTEM ERROR:** ${error.message}`);
-
+                    state.selectedFiles = []; // Xato bo'lsa ham navbatni bo'shatish
                 }
             }
-
             // 🟢 5. UI HELPERS
 
             function addMessage(role, text) {
